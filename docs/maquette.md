@@ -154,3 +154,68 @@ Navigation inférieure :
 - Les déverrouillages réussis et les codes PIN échoués peuvent être activés ou désactivés indépendamment.
 - Chaque interrupteur reflète le réglage correspondant.
 - Les autorisations nécessaires à chaque type de surveillance sont prises en compte.
+
+## Capture photo
+
+![Maquette de l'écran Capture photo](./visuals/photo-capture.svg)
+
+### Structure
+
+- En-tête :
+  - Flèche de retour vers Paramètres.
+  - Titre « Capture photo ».
+- Carte « Capture automatique » :
+  - Icône de caméra.
+  - Titre et description.
+  - Interrupteur d'activation.
+- Carte « Paramètres de capture » :
+  - Caméra : Avant.
+  - Qualité photo : Élevée.
+- Carte informative :
+  - Rappel de l'indépendance entre la capture photo et les réglages de surveillance.
+
+Navigation inférieure :
+- Galerie.
+- Paramètres (actif).
+
+### États et interactions
+
+- L'interrupteur permet d'activer ou de désactiver la capture photo.
+- Le réglage de la caméra permet de choisir la caméra utilisée.
+- Le réglage de qualité permet de choisir la qualité des photos.
+- La capture photo possède un réglage indépendant de la surveillance.
+
+## Notifications techniques
+
+![Maquette de l'écran Notifications techniques](./visuals/technical-notifications.svg)
+
+### Structure
+
+- En-tête :
+  - Flèche de retour vers Paramètres.
+  - Titre « Notifications techniques ».
+- Carte « Types de notifications » :
+  - Protection interrompue :
+    - Icône de protection.
+    - Description : Signaler lorsque le service de protection s'arrête.
+    - Interrupteur d'activation.
+  - Autorisation manquante :
+    - Icône de clé.
+    - Description : Signaler lorsqu'une autorisation nécessaire n'est plus disponible.
+    - Interrupteur d'activation.
+  - Problème de capture :
+    - Icône de caméra.
+    - Description : Signaler lorsqu'une photo n'a pas pu être capturée ou enregistrée.
+    - Interrupteur d'activation.
+- Carte informative :
+  - Rappel de l'indépendance des trois réglages.
+
+Navigation inférieure :
+- Galerie.
+- Paramètres (actif).
+
+### États et interactions
+
+- Chaque type de notification possède son propre interrupteur.
+- Les trois catégories peuvent être activées ou désactivées indépendamment.
+- Les notifications sont envoyées selon les catégories activées.
