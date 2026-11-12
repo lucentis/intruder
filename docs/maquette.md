@@ -219,3 +219,31 @@ Navigation inférieure :
 - Chaque type de notification possède son propre interrupteur.
 - Les trois catégories peuvent être activées ou désactivées indépendamment.
 - Les notifications sont envoyées selon les catégories activées.
+
+## Stockage local
+
+![Maquette de l'écran Stockage local](./visuals/local-storage.svg)
+
+### Structure
+
+- En-tête :
+  - Flèche de retour vers Paramètres.
+  - Titre « Stockage local ».
+- Carte « Stockage des photos » :
+  - Rappel de la conservation locale des photos.
+  - Espace utilisé par Intruder.
+  - Indicateur visuel de l'espace occupé.
+  - Mention du stockage privé de l'application.
+- Carte informative :
+  - Rappel de l'absence de suppression automatique.
+
+Navigation inférieure :
+- Galerie.
+- Paramètres (actif).
+
+### États et interactions
+
+- L'espace utilisé reflète le volume occupé par les données d'Intruder.
+- L'indicateur visuel évolue en fonction de l'espace utilisé.
+- Les photos sont conservées dans le stockage privé de l'application.
+- Aucune suppression automatique n'est effectuée en V1.
