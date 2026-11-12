@@ -2,61 +2,58 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
   <title>Intruder — Galerie</title>
   <defs>
-    <clipPath id="screen">
-      <rect width="390" height="844" rx="24"/>
-    </clipPath>
     <linearGradient id="photo" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#DADADD"/>
       <stop offset="1" stop-color="#C9C9CE"/>
     </linearGradient>
+    <clipPath id="screen"><rect width="390" height="844" rx="24"/></clipPath>
   </defs>
 
   <g clip-path="url(#screen)">
-    <rect width="390" height="844" fill="#F4F4F5"/>
+    <rect width="390" height="844" fill="#F8FAFC"/>
 
     <!-- En-tête -->
-    <text x="18" y="56" font-family="Arial" font-size="22" font-weight="700" fill="#202124">Intruder</text>
+    <text x="18" y="56" font-family="Arial" font-size="22" font-weight="600" fill="#27272A">Intruder</text>
     <rect x="306" y="35" width="66" height="25" rx="13" fill="#E0EEE4"/>
     <circle cx="318" cy="47.5" r="3.5" fill="#38865A"/>
     <text x="327" y="51.5" font-family="Arial" font-size="11" font-weight="600" fill="#34764F">Actif</text>
-    <line x1="18" y1="72" x2="372" y2="72" stroke="#DEDEE1"/>
+    <line x1="18" y1="72" x2="372" y2="72" stroke="#E2E8F0"/>
 
-    <!-- Filtres compacts -->
+    <!-- Filtres à gauche -->
     <g font-family="Arial" font-size="12">
-      <rect x="18" y="86" width="47" height="29" rx="7" fill="#27272A"/>
+      <rect x="18" y="86" width="47" height="29" rx="14.5" fill="#64748B"/>
       <text x="41.5" y="104.5" text-anchor="middle" fill="#FFFFFF" font-weight="600">Tous</text>
 
-      <rect x="70" y="86" width="61" height="29" rx="7" fill="#E6E6E9"/>
-      <text x="100.5" y="104.5" text-anchor="middle" fill="#45454B">Succès</text>
+      <rect x="70" y="86" width="61" height="29" rx="14.5" fill="#F1F5F9"/>
+      <text x="100.5" y="104.5" text-anchor="middle" fill="#475569">Succès</text>
 
-      <rect x="136" y="86" width="58" height="29" rx="7" fill="#E6E6E9"/>
-      <text x="165" y="104.5" text-anchor="middle" fill="#45454B">Échecs</text>
+      <rect x="136" y="86" width="58" height="29" rx="14.5" fill="#F1F5F9"/>
+      <text x="165" y="104.5" text-anchor="middle" fill="#475569">Échecs</text>
     </g>
 
-    <!-- Calendrier -->
-    <rect x="241" y="86" width="29" height="29" rx="7" fill="#E6E6E9"/>
-    <g transform="translate(248 93)" fill="none" stroke="#45454B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Contrôles alignés à droite -->
+    <rect x="300" y="86" width="29" height="29" rx="8" fill="#F1F5F9"/>
+    <g transform="translate(307 93)" fill="none" stroke="#475569" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
       <rect x="0" y="2" width="15" height="14" rx="2"/>
       <path d="M0 6 H15 M4 0 V4 M11 0 V4"/>
     </g>
 
-    <!-- Grille / Liste -->
-    <rect x="278" y="86" width="56" height="29" rx="7" fill="#E6E6E9"/>
-    <rect x="280" y="88" width="25" height="25" rx="5" fill="#27272A"/>
-    <g transform="translate(286 94)" fill="none" stroke="#FFFFFF" stroke-width="1.2">
-      <rect width="5" height="5" rx=".8"/>
-      <rect x="7" width="5" height="5" rx=".8"/>
-      <rect y="7" width="5" height="5" rx=".8"/>
-      <rect x="7" y="7" width="5" height="5" rx=".8"/>
+    <rect x="337" y="86" width="35" height="29" rx="8" fill="#F1F5F9"/>
+    <rect x="339" y="88" width="15" height="25" rx="6" fill="#64748B"/>
+    <g transform="translate(342 94)" fill="none" stroke="#FFFFFF" stroke-width="1.1">
+      <rect width="3.5" height="3.5" rx=".5"/>
+      <rect x="5" width="3.5" height="3.5" rx=".5"/>
+      <rect y="5" width="3.5" height="3.5" rx=".5"/>
+      <rect x="5" y="5" width="3.5" height="3.5" rx=".5"/>
     </g>
-    <g transform="translate(313 94)" fill="none" stroke="#45454B" stroke-width="1.4" stroke-linecap="round">
-      <path d="M0 1 H13 M0 7 H13 M0 13 H13"/>
+    <g transform="translate(359 94)" fill="none" stroke="#475569" stroke-width="1.3" stroke-linecap="round">
+      <path d="M0 1 H9 M0 7 H9 M0 13 H9"/>
     </g>
 
     <!-- Aujourd'hui -->
-    <text x="18" y="146" font-family="Arial" font-size="15" font-weight="600" fill="#202124">Aujourd'hui</text>
+    <text x="18" y="146" font-family="Arial" font-size="15" font-weight="600" fill="#27272A">Aujourd'hui</text>
 
-    <!-- Première rangée -->
+    <!-- Photos -->
     <g>
       <rect x="18" y="157" width="110" height="110" rx="7" fill="url(#photo)"/>
       <rect x="24" y="245" width="38" height="16" rx="4" fill="#71717A" opacity=".92"/>
@@ -72,10 +69,7 @@
       <rect x="268" y="245" width="38" height="16" rx="4" fill="#71717A" opacity=".92"/>
       <text x="287" y="256.5" font-family="Arial" font-size="9" font-weight="600" text-anchor="middle" fill="#FFFFFF">Succès</text>
       <text x="365" y="256.5" font-family="Arial" font-size="9" text-anchor="end" fill="#FFFFFF">12:15</text>
-    </g>
 
-    <!-- Deuxième rangée -->
-    <g>
       <rect x="18" y="279" width="110" height="110" rx="7" fill="url(#photo)"/>
       <rect x="24" y="367" width="34" height="16" rx="4" fill="#C95757" opacity=".95"/>
       <text x="41" y="378.5" font-family="Arial" font-size="9" font-weight="600" text-anchor="middle" fill="#FFFFFF">Échec</text>
@@ -93,8 +87,7 @@
     </g>
 
     <!-- Hier -->
-    <text x="18" y="426" font-family="Arial" font-size="15" font-weight="600" fill="#202124">Hier</text>
-
+    <text x="18" y="426" font-family="Arial" font-size="15" font-weight="600" fill="#27272A">Hier</text>
     <g>
       <rect x="18" y="437" width="110" height="110" rx="7" fill="url(#photo)"/>
       <rect x="24" y="525" width="38" height="16" rx="4" fill="#71717A" opacity=".92"/>
@@ -113,14 +106,14 @@
     </g>
 
     <!-- Navigation basse -->
-    <rect x="0" y="768" width="390" height="76" fill="#FAFAFA"/>
-    <line x1="0" y1="768" x2="390" y2="768" stroke="#DEDEE1"/>
+    <rect x="0" y="768" width="390" height="76" fill="#FFFFFF"/>
+    <line x1="0" y1="768" x2="390" y2="768" stroke="#E2E8F0"/>
 
-    <g transform="translate(112 790)" fill="none" stroke="#27272A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(112 790)" fill="none" stroke="#64748B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
       <rect x="-8" y="-7" width="16" height="14" rx="2"/>
       <circle cx="0" cy="0" r="2.5"/>
     </g>
-    <text x="112" y="814" text-anchor="middle" font-family="Arial" font-size="11" font-weight="600" fill="#27272A">Galerie</text>
+    <text x="112" y="814" text-anchor="middle" font-family="Arial" font-size="11" font-weight="600" fill="#64748B">Galerie</text>
 
     <g transform="translate(278 790)" fill="none" stroke="#77777A" stroke-width="1.5" stroke-linecap="round">
       <circle r="3"/>
