@@ -122,3 +122,35 @@ Navigation inférieure :
 - Les états des déverrouillages réussis, des codes PIN échoués et de la capture photo dépendent de leurs réglages respectifs.
 - Ces trois fonctions ont des états indépendants.
 - La désactivation globale interrompt la surveillance et les captures automatiques.
+
+
+## Surveillance
+
+![Maquette de l'écran Surveillance](./visuals/monitoring.svg)
+
+### Structure
+
+- En-tête :
+  - Flèche de retour vers Paramètres.
+  - Titre « Surveillance ».
+- Carte « Événements surveillés » :
+  - Déverrouillages réussis :
+    - Icône.
+    - Titre et description.
+    - Interrupteur d'activation.
+  - Codes PIN échoués :
+    - Icône.
+    - Titre et description.
+    - Interrupteur d'activation.
+- Carte informative :
+  - Rappel de l'indépendance des deux réglages.
+
+Navigation inférieure :
+- Galerie.
+- Paramètres (actif).
+
+### États et interactions
+
+- Les déverrouillages réussis et les codes PIN échoués peuvent être activés ou désactivés indépendamment.
+- Chaque interrupteur reflète le réglage correspondant.
+- Les autorisations nécessaires à chaque type de surveillance sont prises en compte.
