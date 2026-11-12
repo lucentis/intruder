@@ -247,3 +247,34 @@ Navigation inférieure :
 - L'indicateur visuel évolue en fonction de l'espace utilisé.
 - Les photos sont conservées dans le stockage privé de l'application.
 - Aucune suppression automatique n'est effectuée en V1.
+
+## À propos
+
+![Maquette de l'écran À propos](./visuals/about.svg)
+
+### Structure
+
+- En-tête :
+  - Flèche de retour vers Paramètres.
+  - Titre « À propos ».
+- Carte d'identité de l'application :
+  - Icône Intruder.
+  - Nom de l'application.
+  - Description.
+  - Numéro de version.
+- Carte « Informations » :
+  - Nom de l'application.
+  - Version.
+- Carte « Informations légales » :
+  - Politique de confidentialité.
+  - Mentions légales.
+  - Licences open source.
+
+Navigation inférieure :
+- Galerie.
+- Paramètres (actif).
+
+### États et interactions
+
+- Le numéro de version correspond à la version installée.
+- Chaque entrée légale permet d'accéder au document correspondant.
