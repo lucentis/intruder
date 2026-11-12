@@ -1,0 +1,79 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
+  <title>Intruder — Protection globale</title>
+  <defs>
+    <clipPath id="screen">
+      <rect width="390" height="844" rx="24"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#screen)">
+    <rect width="390" height="844" fill="#F4F4F5"/>
+
+    <!-- En-tête -->
+    <path d="M27 34 L19 42 L27 50" fill="none" stroke="#45454B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="43" y="48" font-family="Arial" font-size="22" font-weight="600" fill="#202124">Protection globale</text>
+
+    <!-- Protection globale -->
+    <rect x="16" y="78" width="358" height="104" rx="12" fill="#FFFFFF"/>
+    <rect x="29" y="96" width="42" height="42" rx="10" fill="#E8F5EC"/>
+    <path d="M50 105 L60 109 V117 C60 124 55 129 50 132 C45 129 40 124 40 117 V109 Z" fill="none" stroke="#27834D" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M45 117 L49 121 L56 113" fill="none" stroke="#27834D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text x="83" y="113" font-family="Arial" font-size="14" font-weight="600" fill="#202124">Protection globale</text>
+    <text x="83" y="131" font-family="Arial" font-size="11" fill="#71717A">Activer ou désactiver la protection</text>
+
+    <rect x="319" y="106" width="42" height="24" rx="12" fill="#25834D"/>
+    <circle cx="349" cy="118" r="8" fill="#FFFFFF"/>
+
+    <rect x="83" y="145" width="65" height="22" rx="11" fill="#E8F5EC"/>
+    <text x="115.5" y="160" text-anchor="middle" font-family="Arial" font-size="10" font-weight="600" fill="#27834D">Activée</text>
+
+    <!-- État de la protection -->
+    <rect x="16" y="198" width="358" height="183" rx="12" fill="#FFFFFF"/>
+    <text x="30" y="224" font-family="Arial" font-size="13" font-weight="600" fill="#202124">État de la protection</text>
+
+    <text x="30" y="254" font-family="Arial" font-size="12" fill="#71717A">Déverrouillages réussis</text>
+    <rect x="302" y="239" width="58" height="21" rx="10.5" fill="#E8F5EC"/>
+    <text x="331" y="253" text-anchor="middle" font-family="Arial" font-size="10" font-weight="600" fill="#27834D">Activé</text>
+    <line x1="30" y1="269" x2="360" y2="269" stroke="#EEEEF0"/>
+
+    <text x="30" y="293" font-family="Arial" font-size="12" fill="#71717A">Codes PIN échoués</text>
+    <rect x="302" y="278" width="58" height="21" rx="10.5" fill="#E8F5EC"/>
+    <text x="331" y="292" text-anchor="middle" font-family="Arial" font-size="10" font-weight="600" fill="#27834D">Activé</text>
+    <line x1="30" y1="308" x2="360" y2="308" stroke="#EEEEF0"/>
+
+    <text x="30" y="332" font-family="Arial" font-size="12" fill="#71717A">Capture photo</text>
+    <rect x="302" y="317" width="58" height="21" rx="10.5" fill="#E8F5EC"/>
+    <text x="331" y="331" text-anchor="middle" font-family="Arial" font-size="10" font-weight="600" fill="#27834D">Activée</text>
+
+    <!-- Information -->
+    <rect x="16" y="397" width="358" height="104" rx="12" fill="#FFFFFF"/>
+    <circle cx="39" cy="422" r="8" fill="none" stroke="#77777A" stroke-width="1.5"/>
+    <path d="M39 418 V423 M39 427 V427.5" stroke="#77777A" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="54" y="426" font-family="Arial" font-size="13" font-weight="600" fill="#202124">À savoir</text>
+    <text x="30" y="451" font-family="Arial" font-size="11" fill="#71717A">
+      <tspan x="30" dy="0">La désactivation de la protection globale</tspan>
+      <tspan x="30" dy="16">interrompt la surveillance et les captures</tspan>
+      <tspan x="30" dy="16">automatiques.</tspan>
+    </text>
+
+    <!-- Navigation basse -->
+    <rect x="0" y="768" width="390" height="76" fill="#FAFAFA"/>
+    <line x1="0" y1="768" x2="390" y2="768" stroke="#DEDEE1"/>
+
+    <!-- Galerie : copie exacte de la maquette Galerie -->
+    <g transform="translate(112 790)" fill="none" stroke="#77777A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="-8" y="-7" width="16" height="14" rx="2"/>
+      <circle cx="0" cy="0" r="2.5"/>
+    </g>
+    <text x="112" y="814" text-anchor="middle" font-family="Arial" font-size="11" fill="#77777A">Galerie</text>
+
+    <!-- Paramètres : copie exacte de la maquette Galerie -->
+    <g transform="translate(278 790)" fill="none" stroke="#27272A" stroke-width="1.5" stroke-linecap="round">
+      <circle r="3"/>
+      <path d="M0 -9 V-6 M0 6 V9 M-9 0 H-6 M6 0 H9 M-6.5 -6.5 L-4.5 -4.5 M4.5 4.5 L6.5 6.5 M6.5 -6.5 L4.5 -4.5 M-4.5 4.5 L-6.5 6.5"/>
+    </g>
+    <text x="278" y="814" text-anchor="middle" font-family="Arial" font-size="11" fill="#27272A" font-weight="600">Paramètres</text>
+  </g>
+</svg>
