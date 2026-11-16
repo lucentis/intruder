@@ -1,69 +1,63 @@
-/*
- * Android application module configuration.
- *
- * This file defines how the "app" module is built, which Android
- * versions it supports and which libraries it uses.
- */
-
+// Plugins are declared with a version in the root build file; here the module applies them.
 plugins {
-    // Applies the Android application plugin declared in the root build file.
     id("com.android.application")
-
-    // Enables compiler support for Jetpack Compose.
     id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.devtools.ksp")
 }
 
 android {
-    // Unique package namespace used for generated Android classes and resources.
+    // Package of the generated R class (resource ids) and base for relative names
+    // in the manifest (".MainActivity" means "<namespace>.MainActivity").
     namespace = "fr.lucentis.intruder"
 
-    // Android API level used to compile the application.
-    // This does not define the minimum Android version supported by the app.
+    // Android API the code is compiled against: it decides which Android APIs you can call.
     compileSdk = 37
 
     defaultConfig {
-        // Unique identifier installed on the device.
+        // Identity of the app on a device and on stores. It differs from the prototype's id,
+        // so both apps can be installed side by side.
         applicationId = "fr.lucentis.intruder"
 
-        // Minimum Android API level required to install the application.
-        minSdk = 29
+        // Oldest Android version that can install the app (31 = Android 12).
+        minSdk = 31
 
-        // Android API level whose behavior the app is designed and tested for.
+        // Android version whose behavior the app declares it supports. Android applies
+        // behavior changes (background limits, edge-to-edge, ...) according to this value.
         targetSdk = 36
 
-        // Internal version number used by Android to identify app updates.
+        // versionCode: integer the system uses to compare versions, must only increase.
+        // versionName: free text shown to the user.
         versionCode = 1
-
-        // Human-readable version displayed to users.
         versionName = "0.1.0"
     }
 
-    // Enables Jetpack Compose support in this Android module.
     buildFeatures {
         compose = true
     }
 }
 
 dependencies {
-    // Compose BOM (Bill of Materials).
-    // It centralizes compatible versions for Compose libraries,
-    // so individual Compose dependencies do not need explicit versions.
+    // BOM (Bill of Materials): pins mutually compatible versions of all Compose libraries,
+    // so the individual Compose dependencies below declare no version.
     val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
 
+    // implementation: on the classpath when compiling and running the app.
     implementation(composeBom)
-
-    // Integration between Android Activity and Jetpack Compose.
-    implementation("androidx.activity:activity-compose:1.13.0")
-
-    // Material Design 3 components for Compose.
+    implementation("androidx.activity:activity-compose:1.13.0") // setContent {} for Compose
     implementation("androidx.compose.material3:material3")
-
-    // Core Compose UI APIs.
     implementation("androidx.compose.ui:ui")
-
-    // Helpers for displaying Compose previews in Android Studio.
     implementation("androidx.compose.ui:ui-tooling-preview")
 
-    // Development-only tools for inspecting Compose layouts.
+    implementation("androidx.room:room-runtime:2.8.5")
+    implementation("androidx.room:room-ktx:2.8.5")
+    // ksp: processor that runs at build time and generates code. It is not shipped in the APK.
+    ksp("androidx.room:room-compiler:2.8.5")
+
+    implementation("androidx.datastore:datastore-preferences:1.2.0")
+
+    // debugImplementation: only in debug builds (developer tooling).
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    // testImplementation: only for local unit tests (src/test), which run on the JVM.
+    testImplementation("junit:junit:4.13.2")
 }

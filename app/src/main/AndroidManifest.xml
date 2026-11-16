@@ -1,18 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    The manifest tells the Android system what the app contains. Every Activity, Service,
+    BroadcastReceiver and ContentProvider must be declared here, along with the permissions
+    the app requests. A component that is not declared cannot be started.
+    There is no INTERNET permission: the app cannot access the network.
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+        android:name: custom Application class, instantiated by the system before any
+        other component of the app.
+        allowBackup="false": prevents Android backups from copying the app data, so photos
+        and events are not restored after a reinstall.
+        theme: window theme shown before Compose draws the first frame.
+    -->
     <application
+        android:name=".IntruderApplication"
         android:allowBackup="false"
         android:label="Intruder"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
-        <!-- Main entry point displayed when the user launches the application. -->
+        <!--
+            exported="true": other apps may start this Activity. Required here because the
+            launcher is another app and must be able to open ours (mandatory since Android 12
+            for any component with an intent-filter).
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
 
-            <!-- Makes this activity accessible from the Android launcher. -->
+            <!-- MAIN + LAUNCHER: makes this Activity the entry point shown in the app drawer. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -21,4 +39,5 @@
         </activity>
 
     </application>
+
 </manifest>
