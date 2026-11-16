@@ -1,0 +1,77 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
+  <title>Intruder — Galerie vide</title>
+  <defs>
+    <clipPath id="screen"><rect width="390" height="844" rx="24"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#screen)">
+    <rect width="390" height="844" fill="#F8FAFC"/>
+
+    <!-- En-tête -->
+    <text x="18" y="56" font-family="Arial" font-size="22" font-weight="600" fill="#27272A">Intruder</text>
+    <rect x="306" y="35" width="66" height="25" rx="13" fill="#E0EEE4"/>
+    <circle cx="318" cy="47.5" r="3.5" fill="#38865A"/>
+    <text x="327" y="51.5" font-family="Arial" font-size="11" font-weight="600" fill="#34764F">Actif</text>
+    <line x1="18" y1="72" x2="372" y2="72" stroke="#E2E8F0"/>
+
+    <!-- Filtres -->
+    <g font-family="Arial" font-size="12">
+      <rect x="18" y="86" width="47" height="29" rx="14.5" fill="#64748B"/>
+      <text x="41.5" y="104.5" text-anchor="middle" fill="#FFFFFF" font-weight="600">Tous</text>
+
+      <rect x="70" y="86" width="61" height="29" rx="14.5" fill="#F1F5F9"/>
+      <text x="100.5" y="104.5" text-anchor="middle" fill="#475569">Succès</text>
+
+      <rect x="136" y="86" width="58" height="29" rx="14.5" fill="#F1F5F9"/>
+      <text x="165" y="104.5" text-anchor="middle" fill="#475569">Échecs</text>
+    </g>
+
+    <!-- Contrôles alignés à droite -->
+    <rect x="300" y="86" width="29" height="29" rx="8" fill="#F1F5F9"/>
+    <g transform="translate(307 93)" fill="none" stroke="#475569" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="0" y="2" width="15" height="14" rx="2"/>
+      <path d="M0 6 H15 M4 0 V4 M11 0 V4"/>
+    </g>
+
+    <rect x="337" y="86" width="35" height="29" rx="8" fill="#F1F5F9"/>
+    <rect x="339" y="88" width="15" height="25" rx="6" fill="#64748B"/>
+    <g transform="translate(342 94)" fill="none" stroke="#FFFFFF" stroke-width="1.1">
+      <rect width="3.5" height="3.5" rx=".5"/>
+      <rect x="5" width="3.5" height="3.5" rx=".5"/>
+      <rect y="5" width="3.5" height="3.5" rx=".5"/>
+      <rect x="5" y="5" width="3.5" height="3.5" rx=".5"/>
+    </g>
+    <g transform="translate(359 94)" fill="none" stroke="#475569" stroke-width="1.3" stroke-linecap="round">
+      <path d="M0 1 H9 M0 7 H9 M0 13 H9"/>
+    </g>
+
+    <!-- Contenu vide -->
+    <g transform="translate(195 351)" fill="none" stroke="#64748B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="-22" y="-17" width="44" height="34" rx="5"/>
+      <circle cx="0" cy="0" r="7"/>
+      <path d="M-15 -11 H-9"/>
+      <path d="M-15 -6 H-12"/>
+    </g>
+
+    <text x="195" y="407" font-family="Arial" font-size="16" font-weight="600" text-anchor="middle" fill="#27272A">Votre galerie est vide</text>
+    <text x="195" y="433" font-family="Arial" font-size="13" text-anchor="middle" fill="#71717A">Les événements détectés apparaîtront</text>
+    <text x="195" y="451" font-family="Arial" font-size="13" text-anchor="middle" fill="#71717A">ici.</text>
+
+    <!-- Navigation basse -->
+    <rect x="0" y="768" width="390" height="76" fill="#FFFFFF"/>
+    <line x1="0" y1="768" x2="390" y2="768" stroke="#E2E8F0"/>
+
+    <g transform="translate(112 790)" fill="none" stroke="#64748B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="-8" y="-7" width="16" height="14" rx="2"/>
+      <circle cx="0" cy="0" r="2.5"/>
+    </g>
+    <text x="112" y="814" text-anchor="middle" font-family="Arial" font-size="11" font-weight="600" fill="#64748B">Galerie</text>
+
+    <g transform="translate(278 790)" fill="none" stroke="#77777A" stroke-width="1.5" stroke-linecap="round">
+      <circle r="3"/>
+      <path d="M0 -9 V-6 M0 6 V9 M-9 0 H-6 M6 0 H9 M-6.5 -6.5 L-4.5 -4.5 M4.5 4.5 L6.5 6.5 M6.5 -6.5 L4.5 -4.5 M-4.5 4.5 L-6.5 6.5"/>
+    </g>
+    <text x="278" y="814" text-anchor="middle" font-family="Arial" font-size="11" fill="#77777A">Paramètres</text>
+  </g>
+</svg>

@@ -49,6 +49,62 @@
 - Le calendrier permet de choisir une période personnalisée.
 - Un appui long sur une vignette active le mode sélection multiple.
 
+### États alternatifs
+
+#### 1. Galerie vide
+
+![Maquette de la Galerie vide](./visuals/galery-empty.svg)
+
+**Condition :** aucun événement n'a encore été enregistré.
+
+- Titre : « Votre galerie est vide »
+- Description : « Les événements détectés apparaîtront ici. »
+- Aucun bouton ni appel à l'action.
+
+Les filtres et les contrôles d'affichage restent visibles.
+
+#### 2. Aucun résultat
+
+![Maquette de la Galerie sans résultat](./visuals/galery-no-results.svg)
+
+**Condition :** des événements existent, mais aucun ne correspond aux filtres actifs.
+
+- Titre : « Aucun résultat »
+- Description : « Aucun événement ne correspond à vos filtres. »
+- Action : « Effacer les filtres »
+
+L'action réinitialise les filtres actifs et réaffiche les événements.
+
+#### 3. Mode sélection multiple
+
+![Maquette de la Galerie en mode sélection](./visuals/galery-selection.svg)
+
+**Condition :** l'utilisateur effectue un appui long sur une vignette.
+
+- La Galerie passe en mode sélection.
+- L'utilisateur peut sélectionner plusieurs événements.
+- Une action permet de sélectionner tous les événements affichés.
+- Une action permet de quitter le mode sélection.
+- Une action permet de supprimer les événements sélectionnés.
+
+La sélection de tous les événements respecte les filtres actifs.
+
+#### 4. Confirmation de suppression
+
+![Maquette de confirmation de suppression](./visuals/galery-delete-confirmation.svg)
+
+**Condition :** l'utilisateur demande la suppression d'un événement ou de plusieurs événements.
+
+- Titre pour un événement : « Supprimer cet événement ? »
+- Titre pour plusieurs événements : « Supprimer les événements ? »
+- Message pour un événement : « Cet événement sera définitivement supprimé de votre galerie. Cette action est irréversible. »
+- Message pour plusieurs événements : « Les événements sélectionnés seront définitivement supprimés de votre galerie. Cette action est irréversible. »
+- Actions :
+  - « Annuler » : ferme la confirmation sans supprimer les événements.
+  - « Supprimer » : confirme la suppression définitive.
+
+Après confirmation, les événements supprimés disparaissent de la Galerie.
+
 ---
 
 ## Paramètres
