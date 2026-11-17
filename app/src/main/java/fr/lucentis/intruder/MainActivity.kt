@@ -105,6 +105,9 @@ private fun SkeletonScreen(container: AppContainer) {
     // "by": delegated property, so we write eventCount instead of eventCount.value.
     val eventCount by remember { container.eventRepository.observeCount() }
         .collectAsState(initial = 0)
+        
+    val latestEvent by remember { container.eventRepository.observeLatest() }
+        .collectAsState(initial = null)
 
     val settings by remember { container.settingsRepository.settings }
         .collectAsState(initial = AppSettings())
@@ -135,7 +138,7 @@ private fun SkeletonScreen(container: AppContainer) {
             },
             modifier = Modifier.padding(top = 16.dp)
         )
-
+        
         Button(
             onClick = {
                 val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
@@ -153,6 +156,39 @@ private fun SkeletonScreen(container: AppContainer) {
         ) {
             Text("Activer l'administrateur")
         }
+        
+        Button(
+            onClick = {
+                scope.launch {
+                    container.settingsRepository.update {
+                        it.copy(automaticCaptureEnabled = !it.automaticCaptureEnabled)
+                    }
+                }
+            },
+            modifier = Modifier.padding(top = 12.dp)
+        ) {
+            Text(
+                if (settings.automaticCaptureEnabled) {
+                    "Désactiver la capture automatique"
+                } else {
+                    "Activer la capture automatique"
+                }
+            )
+        }
+        
+        Text(
+            text = "Dernier événement enregistré :",
+            modifier = Modifier.padding(top = 24.dp)
+        )
+
+        if (latestEvent != null) {
+            Text("Type : ${latestEvent!!.type}")
+            Text("Capture : ${latestEvent!!.captureStatus}")
+            Text("Timestamp : ${latestEvent!!.timestamp}")
+        } else {
+            Text("Aucun événement enregistré.")
+        }
+
 
         Text(
             text = "Squelette technique, phase 2.",

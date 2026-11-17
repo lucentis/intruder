@@ -11,6 +11,8 @@ interface EventRepository {
     suspend fun getById(id: Long): Event?
 
     fun observeCount(): Flow<Int>
+    
+    fun observeLatest(): Flow<Event?>
 
     // Deleting the database rows has priority: a photo file that cannot be removed never
     // prevents the deletion of its event (see DeleteResult).

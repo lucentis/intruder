@@ -19,6 +19,10 @@ interface EventDao {
     // each time the events table changes. The UI updates itself without manual refresh.
     @Query("SELECT COUNT(*) FROM events")
     fun observeCount(): Flow<Int>
+    
+    // Observes the most recently recorded event.
+    @Query("SELECT * FROM events ORDER BY timestamp DESC, id DESC LIMIT 1")
+    fun observeLatest(): Flow<EventEntity?>
 
     @Query("SELECT * FROM events WHERE id = :id")
     suspend fun getById(id: Long): EventEntity?

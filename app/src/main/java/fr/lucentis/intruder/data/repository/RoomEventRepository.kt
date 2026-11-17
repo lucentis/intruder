@@ -8,6 +8,7 @@ import fr.lucentis.intruder.domain.event.EventRepository
 import fr.lucentis.intruder.domain.event.PhotoStorage
 import fr.lucentis.intruder.domain.model.Event
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class RoomEventRepository(
     private val eventDao: EventDao,
@@ -21,6 +22,8 @@ class RoomEventRepository(
         persistence { eventDao.getById(id)?.toDomain() }
 
     override fun observeCount(): Flow<Int> = eventDao.observeCount()
+    
+    override fun observeLatest(): Flow<Event?> = eventDao.observeLatest().map { it?.toDomain() }
 
     override suspend fun deleteEvents(ids: List<Long>): DeleteResult {
         var deletedEvents = 0
