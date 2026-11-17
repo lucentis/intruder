@@ -7,6 +7,11 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+
     <!--
         android:name: custom Application class, instantiated by the system before any
         other component of the app.
@@ -36,6 +41,11 @@
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
+
+        <service
+            android:name=".platform.monitoring.FailedUnlockCaptureService"
+            android:exported="false"
+            android:foregroundServiceType="camera" />
 
         <!--
             exported="true": other apps may start this Activity. Required here because the

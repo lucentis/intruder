@@ -28,6 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import fr.lucentis.intruder.di.AppContainer
 import fr.lucentis.intruder.domain.model.AppSettings
 import fr.lucentis.intruder.domain.model.CaptureStatus
@@ -181,13 +186,38 @@ private fun SkeletonScreen(container: AppContainer) {
             modifier = Modifier.padding(top = 24.dp)
         )
 
-        if (latestEvent != null) {
-            Text("Type : ${latestEvent!!.type}")
-            Text("Capture : ${latestEvent!!.captureStatus}")
-            Text("Timestamp : ${latestEvent!!.timestamp}")
-        } else {
-            Text("Aucun événement enregistré.")
-        }
+        latestEvent?.let { event ->
+            Text("Type : ${event.type}")
+            Text("Capture : ${event.captureStatus}")
+            Text("Timestamp : ${event.timestamp}")
+
+            if (event.captureStatus == CaptureStatus.SUCCESS && event.photoPath != null) {
+                val bitmap = remember(event.photoPath) {
+                    BitmapFactory.decodeFile(event.photoPath)
+                }
+
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = "Photo du dernier événement",
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .size(240.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Text("La photo est introuvable ou illisible.")
+                }
+            } else {
+                Text(
+                    when (event.captureStatus) {
+                        CaptureStatus.FAILED -> "La prise de photo a échoué."
+                        CaptureStatus.SKIPPED -> "Aucune photo n'a été prise."
+                        CaptureStatus.SUCCESS -> "Aucune photo associée."
+                    }
+                )
+            }
+        } ?: Text("Aucun événement enregistré.")
 
 
         Text(
