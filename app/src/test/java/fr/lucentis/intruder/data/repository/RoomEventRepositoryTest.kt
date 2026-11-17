@@ -8,6 +8,7 @@ import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -86,6 +87,22 @@ class RoomEventRepositoryTest {
     }
 
     @Test
+    fun observeLatestEmitsTheMostRecentEventAsADomainEvent() = runBlocking<Unit> {
+        repository.insert(event().copy(timestamp = 10L))
+        val newestId = repository.insert(event().copy(timestamp = 30L))
+        repository.insert(event().copy(timestamp = 20L))
+
+        val latest = repository.observeLatest().first()
+
+        assertEquals(event().copy(id = newestId, timestamp = 30L), latest)
+    }
+
+    @Test
+    fun observeLatestEmitsNullWhenThereIsNoEvent() = runBlocking<Unit> {
+        assertNull(repository.observeLatest().first())
+    }
+
+    @Test
     fun deleteRemovesTheRowsAndThePhotoFiles() = runBlocking<Unit> {
         val photo = File(photosDirectory, "a.jpg").apply { writeText("x") }
         val id = repository.insert(event(photoPath = photo.absolutePath))
@@ -143,6 +160,10 @@ private class FakeEventDao : EventDao {
     }
 
     override fun observeCount(): Flow<Int> = flowOf(rows.size)
+
+    // Mirrors the real query: ORDER BY timestamp DESC, id DESC LIMIT 1.
+    override fun observeLatest(): Flow<EventEntity?> =
+        flowOf(rows.maxWithOrNull(compareBy<EventEntity>({ it.timestamp }, { it.id })))
 
     override suspend fun getById(id: Long): EventEntity? = rows.firstOrNull { it.id == id }
 
