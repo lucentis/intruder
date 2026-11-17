@@ -15,13 +15,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import fr.lucentis.intruder.data.database.EventEntity
 import fr.lucentis.intruder.di.AppContainer
+import fr.lucentis.intruder.domain.model.AppSettings
+import fr.lucentis.intruder.domain.model.CaptureStatus
+import fr.lucentis.intruder.domain.model.Event
+import fr.lucentis.intruder.domain.model.EventType
 import kotlinx.coroutines.launch
 
 /**
@@ -53,7 +58,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Temporary screen used to validate the toolchain, Room and DataStore on a device.
+// Temporary screen used to validate the toolchain, the repositories and DataStore on a
+// device. It goes through the domain interfaces, like the real screens will.
 //
 // A @Composable function describes the UI for a given state. Compose calls it again
 // ("recomposition") whenever a State it read has changed, and redraws only what differs.
@@ -68,12 +74,14 @@ private fun SkeletonScreen(container: AppContainer) {
     // collectAsState: exposes the latest value of a Flow as a Compose State. When the table
     //   changes, Room emits, the state updates and the screen recomposes by itself.
     // "by": delegated property, so we write eventCount instead of eventCount.value.
-    val eventCount by remember { container.database.eventDao().observeCount() }
+    val eventCount by remember { container.eventRepository.observeCount() }
         .collectAsState(initial = 0)
 
-    val protectionEnabled by remember {
-        container.protectionPreferences.globalProtectionEnabled
-    }.collectAsState(initial = false)
+    val settings by remember { container.settingsRepository.settings }
+        .collectAsState(initial = AppSettings())
+
+    // mutableStateOf creates a State that the UI can write to: changing it recomposes.
+    var lastTestEventId by remember { mutableStateOf<Long?>(null) }
 
     Column(
         modifier = Modifier
@@ -91,7 +99,7 @@ private fun SkeletonScreen(container: AppContainer) {
         )
 
         Text(
-            text = "Squelette technique, phase 1.",
+            text = "Squelette technique, phase 2.",
             modifier = Modifier.padding(top = 8.dp)
         )
 
@@ -101,7 +109,7 @@ private fun SkeletonScreen(container: AppContainer) {
         )
 
         Text(
-            text = if (protectionEnabled) {
+            text = if (settings.globalProtectionEnabled) {
                 "Préférences DataStore : protection globale activée."
             } else {
                 "Préférences DataStore : protection globale désactivée."
@@ -109,15 +117,21 @@ private fun SkeletonScreen(container: AppContainer) {
             modifier = Modifier.padding(top = 8.dp)
         )
 
+        Text(
+            text = "Photos automatiques : ${if (settings.automaticCaptureEnabled) "oui" else "non"}, " +
+                "caméra : ${settings.cameraFacing}, qualité : ${settings.photoQuality}.",
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
         Button(
             onClick = {
                 scope.launch {
-                    container.database.eventDao().insert(
-                        EventEntity(
-                            type = "UNLOCK_SUCCESS",
+                    lastTestEventId = container.eventRepository.insert(
+                        Event(
+                            type = EventType.UNLOCK_SUCCESS,
                             timestamp = System.currentTimeMillis(),
                             photoPath = null,
-                            captureStatus = "SKIPPED",
+                            captureStatus = CaptureStatus.SKIPPED,
                             failureReason = null
                         )
                     )
@@ -130,9 +144,27 @@ private fun SkeletonScreen(container: AppContainer) {
 
         Button(
             onClick = {
+                // A delegated property cannot be smart-cast, hence the local copy.
+                val id = lastTestEventId
+                if (id != null) {
+                    scope.launch {
+                        container.eventRepository.deleteEvents(listOf(id))
+                        lastTestEventId = null
+                    }
+                }
+            },
+            enabled = lastTestEventId != null,
+            modifier = Modifier.padding(top = 12.dp)
+        ) {
+            Text("Supprimer le dernier événement de test")
+        }
+
+        Button(
+            onClick = {
                 scope.launch {
-                    container.protectionPreferences
-                        .setGlobalProtectionEnabled(!protectionEnabled)
+                    container.settingsRepository.update {
+                        it.copy(globalProtectionEnabled = !it.globalProtectionEnabled)
+                    }
                 }
             },
             modifier = Modifier.padding(top = 12.dp)
