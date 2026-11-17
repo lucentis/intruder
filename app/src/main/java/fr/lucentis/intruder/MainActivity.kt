@@ -3,6 +3,11 @@ package fr.lucentis.intruder
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,11 +27,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import fr.lucentis.intruder.di.AppContainer
 import fr.lucentis.intruder.domain.model.AppSettings
 import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
+import fr.lucentis.intruder.platform.monitoring.FailedUnlockMonitor
 import kotlinx.coroutines.launch
 
 /**
@@ -68,6 +75,28 @@ private fun SkeletonScreen(container: AppContainer) {
     // Coroutine scope tied to this composable, cancelled when it leaves the screen. Click
     // callbacks are not suspend functions, so coroutines are launched from this scope.
     val scope = rememberCoroutineScope()
+    
+    // Device Admin is managed by Android, not by our application.
+    // We query the system to know whether our receiver is currently active.
+    val context = LocalContext.current
+    val devicePolicyManager = remember {
+        context.getSystemService(DevicePolicyManager::class.java)
+    }
+    val adminComponent = remember {
+        ComponentName(context, FailedUnlockMonitor::class.java)
+    }
+
+    var isAdminActive by remember {
+        mutableStateOf(devicePolicyManager.isAdminActive(adminComponent))
+    }
+
+    // Android displays its own confirmation screen. When it closes, we query
+    // DevicePolicyManager again instead of assuming that the user accepted.
+    val adminActivationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        isAdminActive = devicePolicyManager.isAdminActive(adminComponent)
+    }
 
     // remember: keeps the value across recompositions (not across an Activity recreation).
     //   Without it, a new Flow would be created at every recomposition.
@@ -97,6 +126,33 @@ private fun SkeletonScreen(container: AppContainer) {
             text = "Intruder",
             style = MaterialTheme.typography.headlineMedium
         )
+        
+        Text(
+            text = if (isAdminActive) {
+                "Administrateur de l'appareil : activé."
+            } else {
+                "Administrateur de l'appareil : désactivé."
+            },
+            modifier = Modifier.padding(top = 16.dp)
+        )
+
+        Button(
+            onClick = {
+                val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+                    putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
+                    putExtra(
+                        DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                        "Intruder doit pouvoir détecter les tentatives de déverrouillage échouées."
+                    )
+                }
+
+                adminActivationLauncher.launch(intent)
+            },
+            enabled = !isAdminActive,
+            modifier = Modifier.padding(top = 12.dp)
+        ) {
+            Text("Activer l'administrateur")
+        }
 
         Text(
             text = "Squelette technique, phase 2.",

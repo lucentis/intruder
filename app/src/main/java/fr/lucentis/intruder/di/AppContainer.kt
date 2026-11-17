@@ -5,8 +5,13 @@ import fr.lucentis.intruder.data.database.IntruderDatabase
 import fr.lucentis.intruder.data.preferences.ProtectionPreferences
 import fr.lucentis.intruder.data.repository.FilesystemPhotoStorage
 import fr.lucentis.intruder.data.repository.RoomEventRepository
+import fr.lucentis.intruder.domain.event.EventProcessor
 import fr.lucentis.intruder.domain.event.EventRepository
+import fr.lucentis.intruder.domain.event.PhotoCapturer
 import fr.lucentis.intruder.domain.event.PhotoStorage
+import fr.lucentis.intruder.domain.model.CameraFacing
+import fr.lucentis.intruder.domain.model.CaptureResult
+import fr.lucentis.intruder.domain.model.PhotoQuality
 import fr.lucentis.intruder.domain.settings.SettingsRepository
 import java.io.File
 
@@ -41,5 +46,24 @@ class AppContainer(context: Context) {
 
     val eventRepository: EventRepository by lazy {
         RoomEventRepository(database.eventDao(), photoStorage)
+    }
+    
+    // Temporary implementation until the Android camera layer is integrated.
+    private val photoCapturer: PhotoCapturer = object : PhotoCapturer {
+        override suspend fun capture(
+            facing: CameraFacing,
+            quality: PhotoQuality
+        ): CaptureResult {
+            error("Photo capture is not implemented yet.")
+        }
+    }
+
+    val eventProcessor: EventProcessor by lazy {
+        EventProcessor(
+            settingsRepository = settingsRepository,
+            photoCapturer = photoCapturer,
+            eventRepository = eventRepository,
+            photoStorage = photoStorage
+        )
     }
 }

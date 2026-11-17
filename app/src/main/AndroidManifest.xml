@@ -21,6 +21,22 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
+        <receiver
+            android:name=".platform.monitoring.FailedUnlockMonitor"
+            android:label="Intruder"
+            android:description="@string/device_admin_description"
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="true">
+
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
         <!--
             exported="true": other apps may start this Activity. Required here because the
             launcher is another app and must be able to open ours (mandatory since Android 12
