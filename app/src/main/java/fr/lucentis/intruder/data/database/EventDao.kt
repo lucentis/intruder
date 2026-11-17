@@ -19,4 +19,14 @@ interface EventDao {
     // each time the events table changes. The UI updates itself without manual refresh.
     @Query("SELECT COUNT(*) FROM events")
     fun observeCount(): Flow<Int>
+
+    @Query("SELECT * FROM events WHERE id = :id")
+    suspend fun getById(id: Long): EventEntity?
+
+    @Query("SELECT * FROM events WHERE id IN (:ids)")
+    suspend fun getByIds(ids: List<Long>): List<EventEntity>
+
+    // Returns the number of deleted rows.
+    @Query("DELETE FROM events WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>): Int
 }
