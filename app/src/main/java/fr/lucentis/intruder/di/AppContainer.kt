@@ -48,7 +48,7 @@ class AppContainer(context: Context) {
     private val photoCapturer by lazy {
         AndroidPhotoCapturer(
             context = appContext,
-            photosDirectory = photosDirectory
+            photosDirectory = photosDirectory,
         )
     }
 

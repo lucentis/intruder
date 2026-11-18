@@ -12,7 +12,8 @@ import kotlin.coroutines.resume
 
 class AndroidPhotoCapturer(
     private val context: Context,
-    private val photosDirectory: File
+    private val photosDirectory: File,
+    private val captureTimeoutMs: Long = 8_000L
 ) : PhotoCapturer {
 
     override suspend fun capture(
@@ -33,7 +34,8 @@ class AndroidPhotoCapturer(
                 if (continuation.isActive) {
                     continuation.resume(result)
                 }
-            }
+            },
+            captureTimeoutMs = captureTimeoutMs
         )
 
         // If the caller is cancelled, request cancellation of the camera capture.

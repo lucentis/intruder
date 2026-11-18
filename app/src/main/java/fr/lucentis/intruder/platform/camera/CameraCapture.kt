@@ -35,7 +35,8 @@ class CameraCapture(
     private val photosDirectory: File,
     private val facing: CameraFacing,
     private val quality: PhotoQuality,
-    private val onFinished: (CaptureResult) -> Unit
+    private val onFinished: (CaptureResult) -> Unit,
+    private val captureTimeoutMs: Long = 8_000L
 ) {
 
     private val appContext = context.applicationContext
@@ -54,10 +55,10 @@ class CameraCapture(
 
     private var timeoutRunnable: Runnable? = null
 
-    companion object {
-        // Prevents a capture from remaining blocked indefinitely.
-        private const val CAPTURE_TIMEOUT_MS = 15_000L
-    }
+    // companion object {
+    //     // Prevents a capture from remaining blocked indefinitely.
+    //     private const val CAPTURE_TIMEOUT_MS = 15_000L
+    // }
 
     fun start() {
         if (finished.get()) return
@@ -72,13 +73,13 @@ class CameraCapture(
         timeoutRunnable = Runnable {
             fail(
                 CaptureFailureReason.CAPTURE_FAILED,
-                "Camera capture timed out after ${CAPTURE_TIMEOUT_MS}ms"
+                "Camera capture timed out after ${captureTimeoutMs}ms"
             )
         }
 
         cameraHandler?.postDelayed(
             timeoutRunnable!!,
-            CAPTURE_TIMEOUT_MS
+            captureTimeoutMs
         )
 
         try {
