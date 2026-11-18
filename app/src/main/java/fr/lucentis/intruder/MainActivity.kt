@@ -376,5 +376,24 @@ private fun SkeletonScreen(container: AppContainer) {
         ) {
             Text("Basculer la protection globale")
         }
+        
+        Button(
+            onClick = {
+                scope.launch {
+                    container.settingsRepository.update {
+                        it.copy(monitorFailedAttempts = !it.monitorFailedAttempts)
+                    }
+                }
+            },
+            modifier = Modifier.padding(top = 12.dp)
+        ) {
+            Text(
+                if (settings.monitorFailedAttempts) {
+                    "Désactiver la surveillance des échecs"
+                } else {
+                    "Activer la surveillance des échecs"
+                }
+            )
+        }
     }
 }
