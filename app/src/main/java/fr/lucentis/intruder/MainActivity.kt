@@ -40,6 +40,9 @@ import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
 import fr.lucentis.intruder.platform.monitoring.FailedUnlockMonitor
 import kotlinx.coroutines.launch
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 
 /**
  * An Activity is a screen entry point that the system creates and destroys through a
@@ -84,6 +87,22 @@ private fun SkeletonScreen(container: AppContainer) {
     // Device Admin is managed by Android, not by our application.
     // We query the system to know whether our receiver is currently active.
     val context = LocalContext.current
+    
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+    }
+
     val devicePolicyManager = remember {
         context.getSystemService(DevicePolicyManager::class.java)
     }
@@ -164,6 +183,22 @@ private fun SkeletonScreen(container: AppContainer) {
         
         Button(
             onClick = {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            },
+            enabled = !hasCameraPermission,
+            modifier = Modifier.padding(top = 12.dp)
+        ) {
+            Text(
+                if (hasCameraPermission) {
+                    "Autorisation caméra accordée"
+                } else {
+                    "Autoriser l'accès à la caméra"
+                }
+            )
+        }
+        
+        Button(
+            onClick = {
                 scope.launch {
                     container.settingsRepository.update {
                         it.copy(automaticCaptureEnabled = !it.automaticCaptureEnabled)
@@ -189,6 +224,7 @@ private fun SkeletonScreen(container: AppContainer) {
         latestEvent?.let { event ->
             Text("Type : ${event.type}")
             Text("Capture : ${event.captureStatus}")
+            Text("Raison : ${event.failureReason ?: "Aucune"}")
             Text("Timestamp : ${event.timestamp}")
 
             if (event.captureStatus == CaptureStatus.SUCCESS && event.photoPath != null) {
