@@ -1,3 +1,4 @@
+
 package fr.lucentis.intruder.domain.event
 
 import fr.lucentis.intruder.domain.model.AppSettings
@@ -6,6 +7,9 @@ import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
 import fr.lucentis.intruder.domain.settings.SettingsRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -30,6 +34,14 @@ sealed interface EventProcessingOutcome {
     ) : EventProcessingOutcome
 }
 
+// Temporary diagnostic information for the latest processed event.
+// Unlike Event, this information is not persisted in Room.
+data class EventProcessingDiagnostic(
+    val command: EventCommand,
+    val outcome: EventProcessingOutcome,
+    val captureFailure: CaptureResult.Failure?
+)
+
 // Single place where the rules of the specification are applied, whatever the entry point:
 // check the settings, try the capture at most once, then always record the event.
 // It knows nothing about screens or Android components, so every dependency is replaceable
@@ -41,20 +53,37 @@ class EventProcessor(
     private val photoStorage: PhotoStorage
 ) {
 
+    // The latest diagnostic is kept in memory and exposed as a read-only Flow.
+    // The UI can observe it without being able to modify it.
+    private val _diagnostics = MutableStateFlow<EventProcessingDiagnostic?>(null)
+    val diagnostics: StateFlow<EventProcessingDiagnostic?> = _diagnostics.asStateFlow()
+
     suspend fun process(command: EventCommand): EventProcessingOutcome {
         val settings = settingsRepository.settings.first()
 
         if (!settings.globalProtectionEnabled) {
-            return EventProcessingOutcome.Ignored(IgnoredReason.GLOBAL_PROTECTION_DISABLED)
+            return publishDiagnostic(
+                command = command,
+                outcome = EventProcessingOutcome.Ignored(
+                    IgnoredReason.GLOBAL_PROTECTION_DISABLED
+                )
+            )
         }
 
         if (!settings.isMonitoring(command.type)) {
-            return EventProcessingOutcome.Ignored(IgnoredReason.MONITORING_DISABLED)
+            return publishDiagnostic(
+                command = command,
+                outcome = EventProcessingOutcome.Ignored(
+                    IgnoredReason.MONITORING_DISABLED
+                )
+            )
         }
 
         // null means the capture was not attempted. No retry and no queue in V1.
         val capture: CaptureResult? =
             if (settings.automaticCaptureEnabled) attemptCapture(settings) else null
+
+        val captureFailure = capture as? CaptureResult.Failure
 
         val event = Event(
             type = command.type,
@@ -65,10 +94,10 @@ class EventProcessor(
                 is CaptureResult.Success -> CaptureStatus.SUCCESS
                 is CaptureResult.Failure -> CaptureStatus.FAILED
             },
-            failureReason = (capture as? CaptureResult.Failure)?.reason
+            failureReason = captureFailure?.reason
         )
 
-        return try {
+        val outcome = try {
             val id = eventRepository.insert(event)
             EventProcessingOutcome.Recorded(event.copy(id = id))
         } catch (exception: EventPersistenceException) {
@@ -86,6 +115,22 @@ class EventProcessor(
             EventProcessingOutcome.PersistenceFailed(exception, orphanPhotoLeftBehind)
         }
 
+        return publishDiagnostic(command, outcome, captureFailure)
+    }
+
+    // Publishes the result for the diagnostic screen without changing the persisted Event.
+    private fun publishDiagnostic(
+        command: EventCommand,
+        outcome: EventProcessingOutcome,
+        captureFailure: CaptureResult.Failure? = null
+    ): EventProcessingOutcome {
+        _diagnostics.value = EventProcessingDiagnostic(
+            command = command,
+            outcome = outcome,
+            captureFailure = captureFailure
+        )
+
+        return outcome
     }
 
     // The rule "every event is recorded" must hold even when the camera layer misbehaves,

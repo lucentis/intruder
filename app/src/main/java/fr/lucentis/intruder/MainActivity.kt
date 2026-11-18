@@ -1,3 +1,4 @@
+
 package fr.lucentis.intruder
 
 import android.os.Bundle
@@ -34,6 +35,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import fr.lucentis.intruder.di.AppContainer
+import fr.lucentis.intruder.domain.event.EventProcessingOutcome
 import fr.lucentis.intruder.domain.model.AppSettings
 import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
@@ -76,18 +78,18 @@ class MainActivity : ComponentActivity() {
 // Temporary screen used to validate the toolchain, the repositories and DataStore on a
 // device. It goes through the domain interfaces, like the real screens will.
 //
-// A @Composable function describes the UI for a given state. Compose calls it again
+// A @Composable function describes a UI for a given state. Compose calls it again
 // ("recomposition") whenever a State it read has changed, and redraws only what differs.
 @Composable
 private fun SkeletonScreen(container: AppContainer) {
     // Coroutine scope tied to this composable, cancelled when it leaves the screen. Click
     // callbacks are not suspend functions, so coroutines are launched from this scope.
     val scope = rememberCoroutineScope()
-    
+
     // Device Admin is managed by Android, not by our application.
     // We query the system to know whether our receiver is currently active.
     val context = LocalContext.current
-    
+
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -129,8 +131,13 @@ private fun SkeletonScreen(container: AppContainer) {
     // "by": delegated property, so we write eventCount instead of eventCount.value.
     val eventCount by remember { container.eventRepository.observeCount() }
         .collectAsState(initial = 0)
-        
+
     val latestEvent by remember { container.eventRepository.observeLatest() }
+        .collectAsState(initial = null)
+
+    // The processor publishes its latest diagnostic in memory.
+    // This also updates the screen when an event is processed by a background service.
+    val diagnostic by container.eventProcessor.diagnostics
         .collectAsState(initial = null)
 
     val settings by remember { container.settingsRepository.settings }
@@ -153,7 +160,7 @@ private fun SkeletonScreen(container: AppContainer) {
             text = "Intruder",
             style = MaterialTheme.typography.headlineMedium
         )
-        
+
         Text(
             text = if (isAdminActive) {
                 "Administrateur de l'appareil : activé."
@@ -162,7 +169,7 @@ private fun SkeletonScreen(container: AppContainer) {
             },
             modifier = Modifier.padding(top = 16.dp)
         )
-        
+
         Button(
             onClick = {
                 val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
@@ -180,7 +187,7 @@ private fun SkeletonScreen(container: AppContainer) {
         ) {
             Text("Activer l'administrateur")
         }
-        
+
         Button(
             onClick = {
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -196,7 +203,7 @@ private fun SkeletonScreen(container: AppContainer) {
                 }
             )
         }
-        
+
         Button(
             onClick = {
                 scope.launch {
@@ -215,7 +222,7 @@ private fun SkeletonScreen(container: AppContainer) {
                 }
             )
         }
-        
+
         Text(
             text = "Dernier événement enregistré :",
             modifier = Modifier.padding(top = 24.dp)
@@ -255,6 +262,46 @@ private fun SkeletonScreen(container: AppContainer) {
             }
         } ?: Text("Aucun événement enregistré.")
 
+        // Displays the latest processing result, including technical capture information.
+        Text(
+            text = "Diagnostic technique :",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = 24.dp)
+        )
+
+        diagnostic?.let { result ->
+            Text("Événement traité : ${result.command.type}")
+            Text("Date de détection : ${result.command.detectedAt}")
+
+            when (val outcome = result.outcome) {
+                is EventProcessingOutcome.Recorded -> {
+                    Text("Traitement : événement enregistré (ID ${outcome.event.id}).")
+                }
+
+                is EventProcessingOutcome.Ignored -> {
+                    Text("Traitement : événement ignoré.")
+                    Text("Raison : ${outcome.reason}")
+                }
+
+                is EventProcessingOutcome.PersistenceFailed -> {
+                    Text("Traitement : échec de l'enregistrement Room.")
+
+                    Text(
+                        "Photo orpheline : ${
+                            if (outcome.orphanPhotoLeftBehind) "oui" else "non"
+                        }"
+                    )
+                }
+            }
+
+            result.captureFailure?.let { failure ->
+                Text("Échec de capture : oui")
+                Text("Raison : ${failure.reason ?: "Inconnue"}")
+                Text("Étape : ${failure.stage ?: "Non déterminée"}")
+                Text("Détail technique : ${failure.technicalDetails ?: "Aucun détail fourni."}")
+            } ?: Text("Échec de capture : aucun.")
+
+        } ?: Text("Aucun diagnostic disponible.")
 
         Text(
             text = "Squelette technique, phase 2.",
