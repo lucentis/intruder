@@ -1,8 +1,10 @@
+
 package fr.lucentis.intruder.presentation.navigation
 
 import android.Manifest
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -34,9 +36,11 @@ import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
 import fr.lucentis.intruder.platform.monitoring.FailedUnlockMonitor
+import fr.lucentis.intruder.platform.monitoring.SuccessfulUnlockMonitor
 import fr.lucentis.intruder.presentation.home.DiagnosticInfo
 import fr.lucentis.intruder.presentation.home.HomeScreen
 import fr.lucentis.intruder.presentation.settings.SettingsScreen
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Composable
@@ -205,6 +209,8 @@ fun AppNavigation(container: AppContainer) {
                                     globalProtectionEnabled = !it.globalProtectionEnabled
                                 )
                             }
+
+                            synchronizeSuccessfulUnlockMonitor(context, container)
                         }
                     },
                     onToggleFailedAttempts = {
@@ -214,6 +220,18 @@ fun AppNavigation(container: AppContainer) {
                                     monitorFailedAttempts = !it.monitorFailedAttempts
                                 )
                             }
+                        }
+                    },
+                    onToggleSuccessfulUnlocks = {
+                        scope.launch {
+                            container.settingsRepository.update {
+                                it.copy(
+                                    monitorSuccessfulUnlocks =
+                                        !it.monitorSuccessfulUnlocks
+                                )
+                            }
+
+                            synchronizeSuccessfulUnlockMonitor(context, container)
                         }
                     },
                     onAddTestEvent = {
@@ -243,5 +261,25 @@ fun AppNavigation(container: AppContainer) {
                 )
             }
         }
+    }
+}
+
+private suspend fun synchronizeSuccessfulUnlockMonitor(
+    context: Context,
+    container: AppContainer
+) {
+    // Read the persisted settings after the update, rather than relying on
+    // the potentially not-yet-updated Compose state.
+    val settings = container.settingsRepository.settings.first()
+
+    val serviceIntent = Intent(
+        context,
+        SuccessfulUnlockMonitor::class.java
+    )
+
+    if (settings.globalProtectionEnabled && settings.monitorSuccessfulUnlocks) {
+        ContextCompat.startForegroundService(context, serviceIntent)
+    } else {
+        context.stopService(serviceIntent)
     }
 }

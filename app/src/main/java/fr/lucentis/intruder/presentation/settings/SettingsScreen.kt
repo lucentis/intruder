@@ -25,6 +25,7 @@ fun SettingsScreen(
     onToggleAutomaticCapture: () -> Unit,
     onToggleGlobalProtection: () -> Unit,
     onToggleFailedAttempts: () -> Unit,
+    onToggleSuccessfulUnlocks: () -> Unit,
     onAddTestEvent: () -> Unit,
     onDeleteTestEvent: () -> Unit
 ) {
@@ -80,6 +81,25 @@ fun SettingsScreen(
                             "Désactiver la surveillance des échecs"
                         } else {
                             "Activer la surveillance des échecs"
+                        }
+                    )
+                }
+
+                Text(
+                    "Surveillance des déverrouillages réussis : ${
+                        if (settings.monitorSuccessfulUnlocks) "Activée" else "Désactivée"
+                    }"
+                )
+
+                Button(
+                    onClick = onToggleSuccessfulUnlocks,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        if (settings.monitorSuccessfulUnlocks) {
+                            "Désactiver la surveillance des succès"
+                        } else {
+                            "Activer la surveillance des succès"
                         }
                     )
                 }
