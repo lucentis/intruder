@@ -1,3 +1,4 @@
+
 package fr.lucentis.intruder.data.repository
 
 import fr.lucentis.intruder.domain.event.PhotoStorage
@@ -15,14 +16,26 @@ class FilesystemPhotoStorage(private val directory: File) : PhotoStorage {
         // photos directory.
         if (!isInsideDirectory(file)) return false
 
-        return !file.exists() || file.delete()
+        return try {
+            !file.exists() || file.delete()
+        } catch (exception: SecurityException) {
+            false
+        }
     }
 
     private fun isInsideDirectory(file: File): Boolean =
         try {
-            // canonicalFile resolves "..", "." and symbolic links before comparing.
-            file.canonicalFile.startsWith(directory.canonicalFile)
+            // Canonical paths resolve "..", "." and symbolic links before comparing.
+            // Path.startsWith compares directory components, not just text prefixes.
+            val canonicalDirectory = directory.canonicalFile
+            val canonicalFile = file.canonicalFile
+
+            canonicalFile != canonicalDirectory &&
+                canonicalFile.toPath().startsWith(canonicalDirectory.toPath())
+
         } catch (exception: IOException) {
+            false
+        } catch (exception: SecurityException) {
             false
         }
 }

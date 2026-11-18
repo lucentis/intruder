@@ -74,10 +74,18 @@ class EventProcessor(
         } catch (exception: EventPersistenceException) {
             // The event was not stored: remove the photo so it is not left behind, and tell
             // the caller when that cleanup failed too.
-            val orphanPhotoLeftBehind = event.photoPath?.let { !photoStorage.delete(it) } ?: false
+            val orphanPhotoLeftBehind = event.photoPath?.let { path ->
+                try {
+                    !photoStorage.delete(path)
+                } catch (cleanupException: Exception) {
+                    // A cleanup failure must not hide the original persistence failure.
+                    true
+                }
+            } ?: false
 
             EventProcessingOutcome.PersistenceFailed(exception, orphanPhotoLeftBehind)
         }
+
     }
 
     // The rule "every event is recorded" must hold even when the camera layer misbehaves,
@@ -90,8 +98,12 @@ class EventProcessor(
             // destroyed). It must always propagate: swallowing it would keep the work running.
             throw exception
         } catch (exception: Exception) {
-            // Exception and not Throwable: fatal errors such as OutOfMemoryError must not be hidden.
-            CaptureResult.Failure(null)
+            // Preserve unexpected camera errors for diagnostics without exposing
+            // platform exceptions in the Event domain model.
+            CaptureResult.Failure(
+                reason = null,
+                technicalDetails = "${exception.javaClass.simpleName}: ${exception.message}"
+            )
         }
 }
 

@@ -1,3 +1,4 @@
+
 package fr.lucentis.intruder.platform.camera
 
 import android.content.Context
@@ -19,18 +20,23 @@ class AndroidPhotoCapturer(
         quality: PhotoQuality
     ): CaptureResult = suspendCancellableCoroutine { continuation ->
 
+        // Camera2 uses callbacks, so suspendCancellableCoroutine adapts
+        // this asynchronous API to our suspend-based domain interface.
         val cameraCapture = CameraCapture(
             context = context,
             photosDirectory = photosDirectory,
             facing = facing,
             quality = quality,
             onFinished = { result ->
+
+                // A cancelled coroutine must not receive a late capture result.
                 if (continuation.isActive) {
                     continuation.resume(result)
                 }
             }
         )
 
+        // If the caller is cancelled, request cancellation of the camera capture.
         continuation.invokeOnCancellation {
             cameraCapture.cancel()
         }

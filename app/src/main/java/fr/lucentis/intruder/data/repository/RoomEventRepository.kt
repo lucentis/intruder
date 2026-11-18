@@ -1,3 +1,4 @@
+
 package fr.lucentis.intruder.data.repository
 
 import android.database.sqlite.SQLiteException
@@ -22,7 +23,7 @@ class RoomEventRepository(
         persistence { eventDao.getById(id)?.toDomain() }
 
     override fun observeCount(): Flow<Int> = eventDao.observeCount()
-    
+
     override fun observeLatest(): Flow<Event?> = eventDao.observeLatest().map { it?.toDomain() }
 
     override suspend fun deleteEvents(ids: List<Long>): DeleteResult {
@@ -39,8 +40,18 @@ class RoomEventRepository(
             // both. Rows are deleted first and a file failure never undoes that.
             entities.forEach { entity ->
                 val path = entity.photoPath
-                if (path != null && !photoStorage.delete(path)) {
-                    photoDeletionFailures++
+
+                if (path != null) {
+                    // A file deletion failure must not prevent other photos from being deleted.
+                    val deleted = try {
+                        photoStorage.delete(path)
+                    } catch (exception: Exception) {
+                        false
+                    }
+
+                    if (!deleted) {
+                        photoDeletionFailures++
+                    }
                 }
             }
         }
