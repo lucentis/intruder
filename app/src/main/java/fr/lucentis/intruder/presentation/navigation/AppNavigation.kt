@@ -166,105 +166,111 @@ fun AppNavigation(container: AppContainer) {
         ) {
             when (selectedTab) {
                 0 -> GalleryScreen(
-                    events = events,
-                    displayMode = displayMode,
-                    onDisplayModeChange = { mode ->
-                        scope.launch {
-                            container.galleryRepository.setDisplayMode(mode)
-                        }
-                    }
-                )
-
-                1 -> SettingsScreen(
-                    settings = settings,
-                    isAdminActive = isAdminActive,
-                    hasCameraPermission = hasCameraPermission,
-                    hasTestEvent = lastTestEventId != null,
-                    onActivateAdmin = {
-                        val intent = Intent(
-                            DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN
-                        ).apply {
-                            putExtra(
-                                DevicePolicyManager.EXTRA_DEVICE_ADMIN,
-                                adminComponent
-                            )
-                            putExtra(
-                                DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                                "Intruder doit pouvoir détecter les tentatives de déverrouillage échouées."
-                            )
-                        }
-
-                        adminActivationLauncher.launch(intent)
-                    },
-                    onRequestCameraPermission = {
-                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                    },
-                    onToggleAutomaticCapture = {
-                        scope.launch {
-                            container.settingsRepository.update {
-                                it.copy(
-                                    automaticCaptureEnabled = !it.automaticCaptureEnabled
-                                )
-                            }
-                        }
-                    },
-                    onToggleGlobalProtection = {
-                        scope.launch {
-                            container.settingsRepository.update {
-                                it.copy(
-                                    globalProtectionEnabled = !it.globalProtectionEnabled
-                                )
-                            }
-
-                            synchronizeSuccessfulUnlockMonitor(context, container)
-                        }
-                    },
-                    onToggleFailedAttempts = {
-                        scope.launch {
-                            container.settingsRepository.update {
-                                it.copy(
-                                    monitorFailedAttempts = !it.monitorFailedAttempts
-                                )
-                            }
-                        }
-                    },
-                    onToggleSuccessfulUnlocks = {
-                        scope.launch {
-                            container.settingsRepository.update {
-                                it.copy(
-                                    monitorSuccessfulUnlocks =
-                                        !it.monitorSuccessfulUnlocks
-                                )
-                            }
-
-                            synchronizeSuccessfulUnlockMonitor(context, container)
-                        }
-                    },
-                    onAddTestEvent = {
-                        scope.launch {
-                            lastTestEventId = container.eventRepository.insert(
-                                Event(
-                                    type = EventType.UNLOCK_SUCCESS,
-                                    timestamp = System.currentTimeMillis(),
-                                    photoPath = null,
-                                    captureStatus = CaptureStatus.SKIPPED,
-                                    failureReason = null
-                                )
-                            )
-                        }
-                    },
-                    onDeleteTestEvent = {
-                        // A delegated property cannot be smart-cast, hence the local copy.
-                        val id = lastTestEventId
-
-                        if (id != null) {
+                        events = events,
+                        displayMode = displayMode,
+                        onDisplayModeChange = { mode ->
                             scope.launch {
-                                container.eventRepository.deleteEvents(listOf(id))
-                                lastTestEventId = null
+                                container.galleryRepository.setDisplayMode(mode)
                             }
                         }
+                    )
+
+                1 -> Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        SettingsScreen(
+                            settings = settings,
+                            isAdminActive = isAdminActive,
+                            hasCameraPermission = hasCameraPermission,
+                            hasTestEvent = lastTestEventId != null,
+                            onActivateAdmin = {
+                                val intent = Intent(
+                                    DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN
+                                ).apply {
+                                    putExtra(
+                                        DevicePolicyManager.EXTRA_DEVICE_ADMIN,
+                                        adminComponent
+                                    )
+                                    putExtra(
+                                        DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                                        "Intruder doit pouvoir détecter les tentatives de déverrouillage échouées."
+                                    )
+                                }
+
+                                adminActivationLauncher.launch(intent)
+                            },
+                            onRequestCameraPermission = {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            },
+                            onToggleAutomaticCapture = {
+                                scope.launch {
+                                    container.settingsRepository.update {
+                                        it.copy(
+                                            automaticCaptureEnabled = !it.automaticCaptureEnabled
+                                        )
+                                    }
+                                }
+                            },
+                            onToggleGlobalProtection = {
+                                scope.launch {
+                                    container.settingsRepository.update {
+                                        it.copy(
+                                            globalProtectionEnabled = !it.globalProtectionEnabled
+                                        )
+                                    }
+
+                                    synchronizeSuccessfulUnlockMonitor(context, container)
+                                }
+                            },
+                            onToggleFailedAttempts = {
+                                scope.launch {
+                                    container.settingsRepository.update {
+                                        it.copy(
+                                            monitorFailedAttempts = !it.monitorFailedAttempts
+                                        )
+                                    }
+                                }
+                            },
+                            onToggleSuccessfulUnlocks = {
+                                scope.launch {
+                                    container.settingsRepository.update {
+                                        it.copy(
+                                            monitorSuccessfulUnlocks =
+                                                !it.monitorSuccessfulUnlocks
+                                        )
+                                    }
+
+                                    synchronizeSuccessfulUnlockMonitor(context, container)
+                                }
+                            },
+                            onAddTestEvent = {
+                                scope.launch {
+                                    lastTestEventId = container.eventRepository.insert(
+                                        Event(
+                                            type = EventType.UNLOCK_SUCCESS,
+                                            timestamp = System.currentTimeMillis(),
+                                            photoPath = null,
+                                            captureStatus = CaptureStatus.SKIPPED,
+                                            failureReason = null
+                                        )
+                                    )
+                                }
+                            },
+                            onDeleteTestEvent = {
+                                // A delegated property cannot be smart-cast, hence the local copy.
+                                val id = lastTestEventId
+
+                                if (id != null) {
+                                    scope.launch {
+                                        container.eventRepository.deleteEvents(listOf(id))
+                                        lastTestEventId = null
+                                    }
+                                }
+                            }
+                        )
                     }
-                )
             }
         }
     }
