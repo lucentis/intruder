@@ -23,6 +23,10 @@ interface EventDao {
     // Observes the most recently recorded event.
     @Query("SELECT * FROM events ORDER BY timestamp DESC, id DESC LIMIT 1")
     fun observeLatest(): Flow<EventEntity?>
+    
+    // Observes all events, newest first. Room emits again whenever the table changes.
+    @Query("SELECT * FROM events ORDER BY timestamp DESC, id DESC")
+    fun observeAll(): Flow<List<EventEntity>>
 
     @Query("SELECT * FROM events WHERE id = :id")
     suspend fun getById(id: Long): EventEntity?

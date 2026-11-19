@@ -25,6 +25,11 @@ class RoomEventRepository(
     override fun observeCount(): Flow<Int> = eventDao.observeCount()
 
     override fun observeLatest(): Flow<Event?> = eventDao.observeLatest().map { it?.toDomain() }
+    
+    override fun observeAll(): Flow<List<Event>> =
+        eventDao.observeAll().map { events ->
+            events.map { it.toDomain() }
+        }
 
     override suspend fun deleteEvents(ids: List<Long>): DeleteResult {
         var deletedEvents = 0

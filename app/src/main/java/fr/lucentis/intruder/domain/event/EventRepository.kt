@@ -13,6 +13,8 @@ interface EventRepository {
     fun observeCount(): Flow<Int>
     
     fun observeLatest(): Flow<Event?>
+    
+    fun observeAll(): Flow<List<Event>>
 
     // Deleting the database rows has priority: a photo file that cannot be removed never
     // prevents the deletion of its event (see DeleteResult).
