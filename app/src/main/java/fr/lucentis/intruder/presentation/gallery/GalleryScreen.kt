@@ -69,54 +69,91 @@ fun GalleryScreen(
             style = MaterialTheme.typography.headlineMedium
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            FilterChip(
-                selected = selectedFilter == GalleryFilter.ALL,
-                onClick = {
-                    selectedFilter = GalleryFilter.ALL
-                },
-                label = { Text("Tous") }
-            )
+        if (isSelectionMode) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${selectedEventIds.size} sélectionné${if (selectedEventIds.size > 1) "s" else ""}",
+                    style = MaterialTheme.typography.titleMedium
+                )
 
-            FilterChip(
-                selected = selectedFilter == GalleryFilter.SUCCESS,
-                onClick = {
-                    selectedFilter = GalleryFilter.SUCCESS
-                },
-                label = { Text("Succès") }
-            )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = {
+                            selectedEventIds = selectedEventIds +
+                                filteredEvents.map { it.id }
+                        }
+                    ) {
+                        Text("Tout sélectionner")
+                    }
 
-            FilterChip(
-                selected = selectedFilter == GalleryFilter.FAILED,
-                onClick = {
-                    selectedFilter = GalleryFilter.FAILED
-                },
-                label = { Text("Échecs") }
-            )
+                    TextButton(
+                        onClick = {
+                            selectedEventIds = emptySet()
+                        }
+                    ) {
+                        Text("Terminer")
+                    }
+                }
+            }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            FilterChip(
-                selected = displayMode == GalleryDisplayMode.GRID,
-                onClick = {
-                    onDisplayModeChange(GalleryDisplayMode.GRID)
-                },
-                label = { Text("Grille") }
-            )
+        if (!isSelectionMode) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = selectedFilter == GalleryFilter.ALL,
+                    onClick = {
+                        selectedFilter = GalleryFilter.ALL
+                    },
+                    label = { Text("Tous") }
+                )
 
-            FilterChip(
-                selected = displayMode == GalleryDisplayMode.LIST,
-                onClick = {
-                    onDisplayModeChange(GalleryDisplayMode.LIST)
-                },
-                label = { Text("Liste") }
-            )
+                FilterChip(
+                    selected = selectedFilter == GalleryFilter.SUCCESS,
+                    onClick = {
+                        selectedFilter = GalleryFilter.SUCCESS
+                    },
+                    label = { Text("Succès") }
+                )
+
+                FilterChip(
+                    selected = selectedFilter == GalleryFilter.FAILED,
+                    onClick = {
+                        selectedFilter = GalleryFilter.FAILED
+                    },
+                    label = { Text("Échecs") }
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                FilterChip(
+                    selected = displayMode == GalleryDisplayMode.GRID,
+                    onClick = {
+                        onDisplayModeChange(GalleryDisplayMode.GRID)
+                    },
+                    label = { Text("Grille") }
+                )
+
+                FilterChip(
+                    selected = displayMode == GalleryDisplayMode.LIST,
+                    onClick = {
+                        onDisplayModeChange(GalleryDisplayMode.LIST)
+                    },
+                    label = { Text("Liste") }
+                )
+            }
         }
 
         when {
