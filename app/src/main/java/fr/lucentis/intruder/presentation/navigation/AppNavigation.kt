@@ -163,7 +163,6 @@ fun AppNavigation(container: AppContainer) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
         ) {
             when (selectedTab) {
                 0 -> GalleryScreen(
