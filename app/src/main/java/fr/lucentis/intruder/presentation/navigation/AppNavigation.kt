@@ -87,12 +87,13 @@ fun AppNavigation(container: AppContainer) {
         hasCameraPermission = isGranted
     }
 
-    // Room emits a new value whenever the event table changes.
-    val eventCount by remember { container.eventRepository.observeCount() }
-        .collectAsState(initial = 0)
+    // Room emits a new list whenever the event table changes.
+    val events by remember { container.eventRepository.observeAll() }
+        .collectAsState(initial = emptyList())
 
-    val latestEvent by remember { container.eventRepository.observeLatest() }
-        .collectAsState(initial = null)
+    // Events are ordered newest first by the DAO.
+    val eventCount = events.size
+    val latestEvent = events.firstOrNull()
 
     // The processor publishes its latest diagnostic in memory.
     // This also updates the screen when an event is processed by a background service.
