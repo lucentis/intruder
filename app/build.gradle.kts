@@ -43,6 +43,7 @@ dependencies {
 
     // implementation: on the classpath when compiling and running the app.
     implementation(composeBom)
+    implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("androidx.activity:activity-compose:1.13.0") // setContent {} for Compose
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")

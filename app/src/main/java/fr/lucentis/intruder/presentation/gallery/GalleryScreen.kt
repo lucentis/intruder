@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -105,6 +108,43 @@ fun GalleryScreen(
                         selectedFilter = GalleryFilter.ALL
                     }
                 )
+            }
+
+            displayMode == GalleryDisplayMode.GRID -> {
+                val dateGroups = filteredEvents.groupByDate()
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    dateGroups.forEach { group ->
+                        item(
+                            span = {
+                                androidx.compose.foundation.lazy.grid.GridItemSpan(
+                                    maxLineSpan
+                                )
+                            }
+                        ) {
+                            Text(
+                                text = group.date,
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.padding(
+                                    top = 8.dp,
+                                    bottom = 4.dp
+                                )
+                            )
+                        }
+
+                        items(
+                            items = group.events,
+                            key = { event -> event.id }
+                        ) { event ->
+                            GalleryEventItem(event = event)
+                        }
+                    }
+                }
             }
         }
     }

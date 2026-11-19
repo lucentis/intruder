@@ -40,6 +40,8 @@ import fr.lucentis.intruder.platform.monitoring.SuccessfulUnlockMonitor
 import fr.lucentis.intruder.presentation.home.DiagnosticInfo
 import fr.lucentis.intruder.presentation.home.HomeScreen
 import fr.lucentis.intruder.presentation.settings.SettingsScreen
+import fr.lucentis.intruder.domain.gallery.GalleryDisplayMode
+import fr.lucentis.intruder.presentation.gallery.GalleryScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -94,6 +96,9 @@ fun AppNavigation(container: AppContainer) {
     // Events are ordered newest first by the DAO.
     val eventCount = events.size
     val latestEvent = events.firstOrNull()
+    
+    val displayMode by remember { container.galleryRepository.displayMode }
+        .collectAsState(initial = GalleryDisplayMode.GRID)
 
     // The processor publishes its latest diagnostic in memory.
     // This also updates the screen when an event is processed by a background service.
@@ -161,13 +166,14 @@ fun AppNavigation(container: AppContainer) {
                 .verticalScroll(rememberScrollState())
         ) {
             when (selectedTab) {
-                0 -> HomeScreen(
-                    settings = settings,
-                    isAdminActive = isAdminActive,
-                    hasCameraPermission = hasCameraPermission,
-                    eventCount = eventCount,
-                    latestEvent = latestEvent,
-                    diagnostic = diagnosticInfo
+                0 -> GalleryScreen(
+                    events = events,
+                    displayMode = displayMode,
+                    onDisplayModeChange = { mode ->
+                        scope.launch {
+                            container.galleryRepository.setDisplayMode(mode)
+                        }
+                    }
                 )
 
                 1 -> SettingsScreen(
