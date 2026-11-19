@@ -1,4 +1,3 @@
-
 package fr.lucentis.intruder.presentation.gallery
 
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +12,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,7 +33,8 @@ import fr.lucentis.intruder.domain.model.Event
 fun GalleryScreen(
     events: List<Event>,
     displayMode: GalleryDisplayMode,
-    onDisplayModeChange: (GalleryDisplayMode) -> Unit
+    onDisplayModeChange: (GalleryDisplayMode) -> Unit,
+    onDeleteEvents: (List<Long>) -> Unit = {}
 ) {
     var selectedFilter by rememberSaveable {
         mutableStateOf(GalleryFilter.ALL)
@@ -41,6 +42,10 @@ fun GalleryScreen(
 
     var selectedEventIds by remember {
         mutableStateOf(emptySet<Long>())
+    }
+
+    var showDeleteConfirmation by rememberSaveable {
+        mutableStateOf(false)
     }
 
     val filteredEvents = events.filterByGalleryFilter(selectedFilter)
@@ -99,6 +104,14 @@ fun GalleryScreen(
                         }
                     ) {
                         Text("Terminer")
+                    }
+
+                    TextButton(
+                        onClick = {
+                            showDeleteConfirmation = true
+                        }
+                    ) {
+                        Text("Supprimer")
                     }
                 }
             }
@@ -260,6 +273,44 @@ fun GalleryScreen(
                 }
             }
         }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteConfirmation = false
+            },
+            title = {
+                Text("Supprimer les événements ?")
+            },
+            text = {
+                Text(
+                    "Voulez-vous supprimer définitivement " +
+                        "${selectedEventIds.size} événement(s) " +
+                        "ainsi que les photos associées ?"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteEvents(selectedEventIds.toList())
+                        selectedEventIds = emptySet()
+                        showDeleteConfirmation = false
+                    }
+                ) {
+                    Text("Supprimer")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                    }
+                ) {
+                    Text("Annuler")
+                }
+            }
+        )
     }
 }
 

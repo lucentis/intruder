@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
@@ -177,6 +178,20 @@ fun AppNavigation(container: AppContainer) {
                         onDisplayModeChange = { mode ->
                             scope.launch {
                                 container.galleryRepository.setDisplayMode(mode)
+                            }
+                        },
+                        onDeleteEvents = { ids ->
+                            scope.launch {
+                                val result = container.eventRepository.deleteEvents(ids)
+
+                                if (result.photoDeletionFailures > 0) {
+                                    Toast.makeText(
+                                        context,
+                                        "${result.deletedEvents} événement(s) supprimé(s), " +
+                                            "mais ${result.photoDeletionFailures} photo(s) n'ont pas pu être supprimées.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
                         }
                     )
