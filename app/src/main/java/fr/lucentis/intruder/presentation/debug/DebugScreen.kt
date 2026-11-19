@@ -1,11 +1,10 @@
 
-package fr.lucentis.intruder.presentation.home
+package fr.lucentis.intruder.presentation.debug
 
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import fr.lucentis.intruder.domain.model.AppSettings
 import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 
@@ -30,11 +28,7 @@ data class DiagnosticInfo(
 )
 
 @Composable
-fun HomeScreen(
-    settings: AppSettings,
-    isAdminActive: Boolean,
-    hasCameraPermission: Boolean,
-    eventCount: Int,
+fun DebugScreen(
     latestEvent: Event?,
     diagnostic: DiagnosticInfo?
 ) {
@@ -45,70 +39,20 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Intruder",
+            text = "Debug",
             style = MaterialTheme.typography.headlineMedium
         )
 
-        Text(
-            text = "Vue d'ensemble",
-            style = MaterialTheme.typography.titleLarge
-        )
-
+        // Dernier événement enregistré dans Room
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("État de la protection", style = MaterialTheme.typography.titleMedium)
-
                 Text(
-                    "Protection globale : ${
-                        if (settings.globalProtectionEnabled) "Activée" else "Désactivée"
-                    }"
+                    "Dernier événement",
+                    style = MaterialTheme.typography.titleMedium
                 )
-                Text(
-                    "Surveillance des échecs : ${
-                        if (settings.monitorFailedAttempts) "Activée" else "Désactivée"
-                    }"
-                )
-                Text(
-                    "Capture automatique : ${
-                        if (settings.automaticCaptureEnabled) "Activée" else "Désactivée"
-                    }"
-                )
-                Text(
-                    "Administrateur Android : ${
-                        if (isAdminActive) "Activé" else "Désactivé"
-                    }"
-                )
-                Text(
-                    "Permission caméra : ${
-                        if (hasCameraPermission) "Accordée" else "Manquante"
-                    }"
-                )
-            }
-        }
-
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("Événements", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = eventCount.toString(),
-                    style = MaterialTheme.typography.headlineLarge
-                )
-                Text("Événement(s) enregistré(s) dans Room.")
-            }
-        }
-
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("Dernier événement", style = MaterialTheme.typography.titleMedium)
 
                 latestEvent?.let { event ->
                     Text("Type : ${event.type}")
@@ -116,7 +60,8 @@ fun HomeScreen(
                     Text("Raison : ${event.failureReason ?: "Aucune"}")
                     Text("Date : ${event.timestamp}")
 
-                    if (event.captureStatus == CaptureStatus.SUCCESS &&
+                    if (
+                        event.captureStatus == CaptureStatus.SUCCESS &&
                         event.photoPath != null
                     ) {
                         val bitmap = remember(event.photoPath) {
@@ -138,9 +83,14 @@ fun HomeScreen(
                     } else {
                         Text(
                             when (event.captureStatus) {
-                                CaptureStatus.FAILED -> "La prise de photo a échoué."
-                                CaptureStatus.SKIPPED -> "Aucune photo n'a été prise."
-                                CaptureStatus.SUCCESS -> "Aucune photo associée."
+                                CaptureStatus.FAILED ->
+                                    "La prise de photo a échoué."
+
+                                CaptureStatus.SKIPPED ->
+                                    "Aucune photo n'a été prise."
+
+                                CaptureStatus.SUCCESS ->
+                                    "Aucune photo associée."
                             }
                         )
                     }
@@ -148,12 +98,16 @@ fun HomeScreen(
             }
         }
 
+        // Dernier diagnostic conservé par EventProcessor
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Dernier diagnostic technique", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Dernier diagnostic technique",
+                    style = MaterialTheme.typography.titleMedium
+                )
 
                 diagnostic?.let { result ->
                     Text("Événement traité : ${result.eventType}")
@@ -167,7 +121,5 @@ fun HomeScreen(
                 } ?: Text("Aucun diagnostic disponible.")
             }
         }
-
-        Spacer(modifier = Modifier.size(8.dp))
     }
 }

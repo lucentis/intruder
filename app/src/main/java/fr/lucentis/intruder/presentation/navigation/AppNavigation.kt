@@ -37,11 +37,11 @@ import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
 import fr.lucentis.intruder.platform.monitoring.FailedUnlockMonitor
 import fr.lucentis.intruder.platform.monitoring.SuccessfulUnlockMonitor
-import fr.lucentis.intruder.presentation.home.DiagnosticInfo
-import fr.lucentis.intruder.presentation.home.HomeScreen
+import fr.lucentis.intruder.presentation.debug.DiagnosticInfo
 import fr.lucentis.intruder.presentation.settings.SettingsScreen
 import fr.lucentis.intruder.domain.gallery.GalleryDisplayMode
 import fr.lucentis.intruder.presentation.gallery.GalleryScreen
+import fr.lucentis.intruder.presentation.debug.DebugScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -155,6 +155,12 @@ fun AppNavigation(container: AppContainer) {
                     onClick = { selectedTab = 1 },
                     icon = { Text("⚙") },
                     label = { Text("Réglages") }
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    icon = { Text("⚙") },
+                    label = { Text("Debug") }
                 )
             }
         }
@@ -271,6 +277,17 @@ fun AppNavigation(container: AppContainer) {
                             }
                         )
                     }
+                
+                2 -> Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    DebugScreen(
+                        latestEvent = latestEvent,
+                        diagnostic = diagnosticInfo
+                    )
+                }
             }
         }
     }
