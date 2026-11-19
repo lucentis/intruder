@@ -34,7 +34,8 @@ fun GalleryScreen(
     events: List<Event>,
     displayMode: GalleryDisplayMode,
     onDisplayModeChange: (GalleryDisplayMode) -> Unit,
-    onDeleteEvents: (List<Long>) -> Unit = {}
+    onDeleteEvents: (List<Long>) -> Unit = {},
+    onEventClick: (Event) -> Unit = {},
 ) {
     var selectedFilter by rememberSaveable {
         mutableStateOf(GalleryFilter.ALL)
@@ -69,10 +70,7 @@ fun GalleryScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        Text(
-            text = "Intruder",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        GalleryHeader()
 
         if (isSelectionMode) {
             Row(
@@ -222,6 +220,8 @@ fun GalleryScreen(
                                 onClick = {
                                     if (isSelectionMode) {
                                         toggleSelection(event.id)
+                                    } else {
+                                        onEventClick(event)
                                     }
                                 },
                                 onLongClick = {
@@ -262,6 +262,8 @@ fun GalleryScreen(
                                 onClick = {
                                     if (isSelectionMode) {
                                         toggleSelection(event.id)
+                                    } else {
+                                        onEventClick(event)
                                     }
                                 },
                                 onLongClick = {

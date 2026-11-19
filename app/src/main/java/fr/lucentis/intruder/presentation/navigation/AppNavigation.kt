@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
@@ -43,6 +44,7 @@ import fr.lucentis.intruder.presentation.settings.SettingsScreen
 import fr.lucentis.intruder.domain.gallery.GalleryDisplayMode
 import fr.lucentis.intruder.presentation.gallery.GalleryScreen
 import fr.lucentis.intruder.presentation.debug.DebugScreen
+import fr.lucentis.intruder.presentation.gallery.EventDetailScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -52,6 +54,23 @@ fun AppNavigation(container: AppContainer) {
     val scope = rememberCoroutineScope()
 
     var selectedTab by rememberSaveable { mutableStateOf(0) }
+
+    var selectedEventId by rememberSaveable {
+        mutableStateOf<Long?>(null)
+    }
+
+    // Room emits a new list whenever the event table changes.
+    val events by remember { container.eventRepository.observeAll() }
+        .collectAsState(initial = emptyList())
+
+    // Find the event currently displayed in the detail screen.
+    val selectedEvent = selectedEventId?.let { id ->
+        events.firstOrNull { it.id == id }
+    }
+
+    BackHandler(enabled = selectedEvent != null) {
+        selectedEventId = null
+    }
 
     // Device Admin is managed by Android, not by our application.
     // We query the system to know whether our receiver is currently active.
@@ -90,14 +109,10 @@ fun AppNavigation(container: AppContainer) {
         hasCameraPermission = isGranted
     }
 
-    // Room emits a new list whenever the event table changes.
-    val events by remember { container.eventRepository.observeAll() }
-        .collectAsState(initial = emptyList())
-
     // Events are ordered newest first by the DAO.
     val eventCount = events.size
     val latestEvent = events.firstOrNull()
-    
+
     val displayMode by remember { container.galleryRepository.displayMode }
         .collectAsState(initial = GalleryDisplayMode.GRID)
 
@@ -106,7 +121,7 @@ fun AppNavigation(container: AppContainer) {
     val diagnostic by container.eventProcessor.diagnostics
         .collectAsState(initial = null)
 
-    val settings by remember { container.settingsRepository.settings }
+    val settings by container.settingsRepository.settings
         .collectAsState(initial = AppSettings())
 
     // Keep track of the test event so that we can delete only that event.
@@ -157,6 +172,7 @@ fun AppNavigation(container: AppContainer) {
                     icon = { Text("⚙") },
                     label = { Text("Réglages") }
                 )
+
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
@@ -172,127 +188,160 @@ fun AppNavigation(container: AppContainer) {
                 .padding(innerPadding)
         ) {
             when (selectedTab) {
-                0 -> GalleryScreen(
-                        events = events,
-                        displayMode = displayMode,
-                        onDisplayModeChange = { mode ->
-                            scope.launch {
-                                container.galleryRepository.setDisplayMode(mode)
+                0 -> {
+                    if (selectedEvent != null) {
+                        EventDetailScreen(
+                            event = selectedEvent,
+                            onBack = {
+                                selectedEventId = null
+                            },
+                            onDelete = {
+                                val eventId = selectedEvent.id
+                                selectedEventId = null
+
+                                scope.launch {
+                                    val result = container.eventRepository.deleteEvents(
+                                        listOf(eventId)
+                                    )
+
+                                    if (result.photoDeletionFailures > 0) {
+                                        Toast.makeText(
+                                            context,
+                                            "${result.deletedEvents} événement supprimé, " +
+                                                "mais la photo n'a pas pu être supprimée.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
                             }
-                        },
-                        onDeleteEvents = { ids ->
-                            scope.launch {
-                                val result = container.eventRepository.deleteEvents(ids)
-
-                                if (result.photoDeletionFailures > 0) {
-                                    Toast.makeText(
-                                        context,
-                                        "${result.deletedEvents} événement(s) supprimé(s), " +
-                                            "mais ${result.photoDeletionFailures} photo(s) n'ont pas pu être supprimées.",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                        }
-                    )
-
-                1 -> Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        SettingsScreen(
-                            settings = settings,
-                            isAdminActive = isAdminActive,
-                            hasCameraPermission = hasCameraPermission,
-                            hasTestEvent = lastTestEventId != null,
-                            onActivateAdmin = {
-                                val intent = Intent(
-                                    DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN
-                                ).apply {
-                                    putExtra(
-                                        DevicePolicyManager.EXTRA_DEVICE_ADMIN,
-                                        adminComponent
-                                    )
-                                    putExtra(
-                                        DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                                        "Intruder doit pouvoir détecter les tentatives de déverrouillage échouées."
-                                    )
-                                }
-
-                                adminActivationLauncher.launch(intent)
-                            },
-                            onRequestCameraPermission = {
-                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                            },
-                            onToggleAutomaticCapture = {
+                        )
+                    } else {
+                        GalleryScreen(
+                            events = events,
+                            displayMode = displayMode,
+                            onDisplayModeChange = { mode ->
                                 scope.launch {
-                                    container.settingsRepository.update {
-                                        it.copy(
-                                            automaticCaptureEnabled = !it.automaticCaptureEnabled
-                                        )
-                                    }
+                                    container.galleryRepository.setDisplayMode(mode)
                                 }
                             },
-                            onToggleGlobalProtection = {
+                            onEventClick = { event ->
+                                selectedEventId = event.id
+                            },
+                            onDeleteEvents = { ids ->
                                 scope.launch {
-                                    container.settingsRepository.update {
-                                        it.copy(
-                                            globalProtectionEnabled = !it.globalProtectionEnabled
-                                        )
-                                    }
+                                    val result = container.eventRepository.deleteEvents(ids)
 
-                                    synchronizeSuccessfulUnlockMonitor(context, container)
-                                }
-                            },
-                            onToggleFailedAttempts = {
-                                scope.launch {
-                                    container.settingsRepository.update {
-                                        it.copy(
-                                            monitorFailedAttempts = !it.monitorFailedAttempts
-                                        )
-                                    }
-                                }
-                            },
-                            onToggleSuccessfulUnlocks = {
-                                scope.launch {
-                                    container.settingsRepository.update {
-                                        it.copy(
-                                            monitorSuccessfulUnlocks =
-                                                !it.monitorSuccessfulUnlocks
-                                        )
-                                    }
-
-                                    synchronizeSuccessfulUnlockMonitor(context, container)
-                                }
-                            },
-                            onAddTestEvent = {
-                                scope.launch {
-                                    lastTestEventId = container.eventRepository.insert(
-                                        Event(
-                                            type = EventType.UNLOCK_SUCCESS,
-                                            timestamp = System.currentTimeMillis(),
-                                            photoPath = null,
-                                            captureStatus = CaptureStatus.SKIPPED,
-                                            failureReason = null
-                                        )
-                                    )
-                                }
-                            },
-                            onDeleteTestEvent = {
-                                // A delegated property cannot be smart-cast, hence the local copy.
-                                val id = lastTestEventId
-
-                                if (id != null) {
-                                    scope.launch {
-                                        container.eventRepository.deleteEvents(listOf(id))
-                                        lastTestEventId = null
+                                    if (result.photoDeletionFailures > 0) {
+                                        Toast.makeText(
+                                            context,
+                                            "${result.deletedEvents} événement(s) supprimé(s), " +
+                                                "mais ${result.photoDeletionFailures} photo(s) n'ont pas pu être supprimées.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                     }
                                 }
                             }
                         )
                     }
-                
+                }
+
+                1 -> Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    SettingsScreen(
+                        settings = settings,
+                        isAdminActive = isAdminActive,
+                        hasCameraPermission = hasCameraPermission,
+                        hasTestEvent = lastTestEventId != null,
+                        onActivateAdmin = {
+                            val intent = Intent(
+                                DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN
+                            ).apply {
+                                putExtra(
+                                    DevicePolicyManager.EXTRA_DEVICE_ADMIN,
+                                    adminComponent
+                                )
+                                putExtra(
+                                    DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                                    "Intruder doit pouvoir détecter les tentatives de déverrouillage échouées."
+                                )
+                            }
+
+                            adminActivationLauncher.launch(intent)
+                        },
+                        onRequestCameraPermission = {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        },
+                        onToggleAutomaticCapture = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        automaticCaptureEnabled = !it.automaticCaptureEnabled
+                                    )
+                                }
+                            }
+                        },
+                        onToggleGlobalProtection = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        globalProtectionEnabled = !it.globalProtectionEnabled
+                                    )
+                                }
+
+                                synchronizeSuccessfulUnlockMonitor(context, container)
+                            }
+                        },
+                        onToggleFailedAttempts = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        monitorFailedAttempts = !it.monitorFailedAttempts
+                                    )
+                                }
+                            }
+                        },
+                        onToggleSuccessfulUnlocks = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        monitorSuccessfulUnlocks =
+                                            !it.monitorSuccessfulUnlocks
+                                    )
+                                }
+
+                                synchronizeSuccessfulUnlockMonitor(context, container)
+                            }
+                        },
+                        onAddTestEvent = {
+                            scope.launch {
+                                lastTestEventId = container.eventRepository.insert(
+                                    Event(
+                                        type = EventType.UNLOCK_SUCCESS,
+                                        timestamp = System.currentTimeMillis(),
+                                        photoPath = null,
+                                        captureStatus = CaptureStatus.SKIPPED,
+                                        failureReason = null
+                                    )
+                                )
+                            }
+                        },
+                        onDeleteTestEvent = {
+                            // A delegated property cannot be smart-cast, hence the local copy.
+                            val id = lastTestEventId
+
+                            if (id != null) {
+                                scope.launch {
+                                    container.eventRepository.deleteEvents(listOf(id))
+                                    lastTestEventId = null
+                                }
+                            }
+                        }
+                    )
+                }
+
                 2 -> Column(
                     modifier = Modifier
                         .fillMaxSize()
