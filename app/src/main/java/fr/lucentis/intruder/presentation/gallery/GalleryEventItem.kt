@@ -2,9 +2,12 @@
 package fr.lucentis.intruder.presentation.gallery
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +28,9 @@ import java.util.Locale
 @Composable
 fun GalleryEventItem(
     event: Event,
+    isSelected: Boolean = false,
+    onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val time = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -36,6 +42,10 @@ fun GalleryEventItem(
             .aspectRatio(1f)
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceVariant)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
     ) {
         val photoPath = event.photoPath
 
@@ -55,7 +65,8 @@ fun GalleryEventItem(
             },
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .background(Color.Black.copy(alpha = 0.65f)),
+                .background(Color.Black.copy(alpha = 0.65f))
+                .padding(horizontal = 6.dp, vertical = 3.dp),
             color = Color.White,
             style = MaterialTheme.typography.labelSmall
         )
@@ -64,9 +75,34 @@ fun GalleryEventItem(
             text = time,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .background(Color.Black.copy(alpha = 0.65f)),
+                .background(Color.Black.copy(alpha = 0.65f))
+                .padding(horizontal = 6.dp, vertical = 3.dp),
             color = Color.White,
             style = MaterialTheme.typography.labelSmall
         )
+
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                    )
+            )
+
+            Text(
+                text = "✓",
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(6.dp)
+                    .background(
+                        MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(50)
+                    )
+                    .padding(horizontal = 7.dp, vertical = 3.dp),
+                color = MaterialTheme.colorScheme.onPrimary,
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
     }
 }

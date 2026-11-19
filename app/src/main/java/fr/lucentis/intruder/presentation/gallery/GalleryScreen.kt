@@ -7,11 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items as lazyListItems
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items as lazyListItems
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,6 +20,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -37,7 +39,24 @@ fun GalleryScreen(
         mutableStateOf(GalleryFilter.ALL)
     }
 
+    var selectedEventIds by remember {
+        mutableStateOf(emptySet<Long>())
+    }
+
     val filteredEvents = events.filterByGalleryFilter(selectedFilter)
+    val isSelectionMode = selectedEventIds.isNotEmpty()
+
+    fun toggleSelection(eventId: Long) {
+        selectedEventIds = if (eventId in selectedEventIds) {
+            selectedEventIds - eventId
+        } else {
+            selectedEventIds + eventId
+        }
+    }
+
+    fun selectEvent(eventId: Long) {
+        selectedEventIds = selectedEventIds + eventId
+    }
 
     Column(
         modifier = Modifier
@@ -56,19 +75,25 @@ fun GalleryScreen(
         ) {
             FilterChip(
                 selected = selectedFilter == GalleryFilter.ALL,
-                onClick = { selectedFilter = GalleryFilter.ALL },
+                onClick = {
+                    selectedFilter = GalleryFilter.ALL
+                },
                 label = { Text("Tous") }
             )
 
             FilterChip(
                 selected = selectedFilter == GalleryFilter.SUCCESS,
-                onClick = { selectedFilter = GalleryFilter.SUCCESS },
+                onClick = {
+                    selectedFilter = GalleryFilter.SUCCESS
+                },
                 label = { Text("Succès") }
             )
 
             FilterChip(
                 selected = selectedFilter == GalleryFilter.FAILED,
-                onClick = { selectedFilter = GalleryFilter.FAILED },
+                onClick = {
+                    selectedFilter = GalleryFilter.FAILED
+                },
                 label = { Text("Échecs") }
             )
         }
@@ -124,9 +149,7 @@ fun GalleryScreen(
                     dateGroups.forEach { group ->
                         item(
                             span = {
-                                androidx.compose.foundation.lazy.grid.GridItemSpan(
-                                    maxLineSpan
-                                )
+                                GridItemSpan(maxLineSpan)
                             }
                         ) {
                             Text(
@@ -143,12 +166,23 @@ fun GalleryScreen(
                             items = group.events,
                             key = { event -> event.id }
                         ) { event ->
-                            GalleryEventItem(event = event)
+                            GalleryEventItem(
+                                event = event,
+                                isSelected = event.id in selectedEventIds,
+                                onClick = {
+                                    if (isSelectionMode) {
+                                        toggleSelection(event.id)
+                                    }
+                                },
+                                onLongClick = {
+                                    selectEvent(event.id)
+                                }
+                            )
                         }
                     }
                 }
             }
-            
+
             displayMode == GalleryDisplayMode.LIST -> {
                 val dateGroups = filteredEvents.groupByDate()
 
@@ -172,7 +206,18 @@ fun GalleryScreen(
                             items = group.events,
                             key = { event -> event.id }
                         ) { event ->
-                            GalleryEventRow(event = event)
+                            GalleryEventRow(
+                                event = event,
+                                isSelected = event.id in selectedEventIds,
+                                onClick = {
+                                    if (isSelectionMode) {
+                                        toggleSelection(event.id)
+                                    }
+                                },
+                                onLongClick = {
+                                    selectEvent(event.id)
+                                }
+                            )
                         }
                     }
                 }
