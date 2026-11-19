@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items as lazyListItems
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -142,6 +144,35 @@ fun GalleryScreen(
                             key = { event -> event.id }
                         ) { event ->
                             GalleryEventItem(event = event)
+                        }
+                    }
+                }
+            }
+            
+            displayMode == GalleryDisplayMode.LIST -> {
+                val dateGroups = filteredEvents.groupByDate()
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    dateGroups.forEach { group ->
+                        item {
+                            Text(
+                                text = group.date,
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.padding(
+                                    top = 8.dp,
+                                    bottom = 4.dp
+                                )
+                            )
+                        }
+
+                        lazyListItems(
+                            items = group.events,
+                            key = { event -> event.id }
+                        ) { event ->
+                            GalleryEventRow(event = event)
                         }
                     }
                 }
