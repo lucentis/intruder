@@ -10,6 +10,8 @@ import fr.lucentis.intruder.domain.event.EventRepository
 import fr.lucentis.intruder.domain.event.PhotoStorage
 import fr.lucentis.intruder.domain.settings.SettingsRepository
 import fr.lucentis.intruder.platform.camera.AndroidPhotoCapturer
+import fr.lucentis.intruder.data.preferences.GalleryPreferences
+import fr.lucentis.intruder.domain.gallery.GalleryRepository
 import java.io.File
 
 /**
@@ -35,6 +37,10 @@ class AppContainer(context: Context) {
 
     val settingsRepository: SettingsRepository by lazy {
         ProtectionPreferences(appContext)
+    }
+    
+    val galleryRepository: GalleryRepository by lazy {
+        GalleryPreferences(appContext)
     }
 
     val photoStorage: PhotoStorage by lazy {

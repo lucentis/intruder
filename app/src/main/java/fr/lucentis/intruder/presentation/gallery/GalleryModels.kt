@@ -13,11 +13,6 @@ enum class GalleryFilter {
     FAILED
 }
 
-enum class GalleryDisplayMode {
-    GRID,
-    LIST
-}
-
 data class GalleryDateGroup(
     val date: String,
     val events: List<Event>
