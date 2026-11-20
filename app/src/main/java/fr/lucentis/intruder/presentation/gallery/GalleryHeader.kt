@@ -1,3 +1,4 @@
+
 package fr.lucentis.intruder.presentation.gallery
 
 import androidx.compose.foundation.background
@@ -9,10 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,8 +41,16 @@ fun GalleryHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (onBack != null) {
-                    TextButton(onClick = onBack) {
-                        Text("←")
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Retour",
+                            modifier = Modifier.size(24.dp),
+                            tint = IntruderColors.TextPrimary
+                        )
                     }
                 }
 
