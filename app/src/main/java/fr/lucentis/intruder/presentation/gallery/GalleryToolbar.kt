@@ -68,7 +68,7 @@ fun GalleryToolbar(
                 .height(32.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(IntruderColors.SurfaceVariant)
-                .padding(1.dp),
+                .padding(2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             GalleryDisplayModeButton(
