@@ -103,6 +103,24 @@ class RoomEventRepositoryTest {
     }
 
     @Test
+    fun observeAllEmitsTheEventsNewestFirstAndBreaksTiesByNewestId() = runBlocking<Unit> {
+        val oldestId = repository.insert(event().copy(timestamp = 10L))
+        val newestId = repository.insert(event().copy(timestamp = 30L))
+        val firstTieId = repository.insert(event().copy(timestamp = 20L))
+        val secondTieId = repository.insert(event().copy(timestamp = 20L))
+
+        val all = repository.observeAll().first()
+
+        assertEquals(listOf(newestId, secondTieId, firstTieId, oldestId), all.map { it.id })
+        assertEquals(event().copy(id = newestId, timestamp = 30L), all.first())
+    }
+
+    @Test
+    fun observeAllEmitsAnEmptyListWhenThereIsNoEvent() = runBlocking<Unit> {
+        assertTrue(repository.observeAll().first().isEmpty())
+    }
+
+    @Test
     fun deleteRemovesTheRowsAndThePhotoFiles() = runBlocking<Unit> {
         val photo = File(photosDirectory, "a.jpg").apply { writeText("x") }
         val id = repository.insert(event(photoPath = photo.absolutePath))
@@ -164,6 +182,14 @@ private class FakeEventDao : EventDao {
     // Mirrors the real query: ORDER BY timestamp DESC, id DESC LIMIT 1.
     override fun observeLatest(): Flow<EventEntity?> =
         flowOf(rows.maxWithOrNull(compareBy<EventEntity>({ it.timestamp }, { it.id })))
+
+    // Mirrors the real query: ORDER BY timestamp DESC, id DESC.
+    override fun observeAll(): Flow<List<EventEntity>> =
+        flowOf(
+            rows.sortedWith(
+                compareByDescending<EventEntity> { it.timestamp }.thenByDescending { it.id }
+            )
+        )
 
     override suspend fun getById(id: Long): EventEntity? = rows.firstOrNull { it.id == id }
 

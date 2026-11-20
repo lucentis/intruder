@@ -242,6 +242,8 @@ private class FakeEventRepository : EventRepository {
 
     override fun observeLatest(): Flow<Event?> = flowOf(events.lastOrNull())
 
+    override fun observeAll(): Flow<List<Event>> = flowOf(events.toList())
+
     override suspend fun deleteEvents(ids: List<Long>): DeleteResult {
         val before = events.size
         events.removeAll { it.id in ids }
