@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -63,11 +65,10 @@ fun GalleryToolbar(
 
         Row(
             modifier = Modifier
-                .background(
-                    color = IntruderColors.SurfaceVariant,
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(2.dp),
+                .height(32.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(IntruderColors.SurfaceVariant)
+                .padding(1.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             GalleryDisplayModeButton(
@@ -121,73 +122,72 @@ private fun GalleryDisplayModeButton(
     selected: Boolean,
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(7.dp)
+
     Box(
         modifier = Modifier
-            .size(44.dp)
+            .size(28.dp)
+            .clip(shape)
+            .background(
+                color = if (selected) {
+                    IntruderColors.Primary
+                } else {
+                    Color.Transparent
+                }
+            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .background(
-                    color = if (selected) {
-                        IntruderColors.Primary
-                    } else {
-                        Color.Transparent
-                    },
-                    shape = RoundedCornerShape(6.dp)
-                ),
-            contentAlignment = Alignment.Center
+        Canvas(
+            modifier = Modifier.size(18.dp)
         ) {
-            Canvas(
-                modifier = Modifier.size(18.dp)
-            ) {
-                val iconColor = if (selected) {
-                    IntruderColors.OnPrimary
-                } else {
-                    IntruderColors.PrimaryVariant
+            val iconColor = if (selected) {
+                IntruderColors.OnPrimary
+            } else {
+                IntruderColors.PrimaryVariant
+            }
+
+            val stroke = 1.5.dp.toPx()
+
+            if (mode == GalleryDisplayMode.GRID) {
+                val cellSize = 5.dp.toPx()
+                val gap = 2.5.dp.toPx()
+                val totalSize = cellSize * 2 + gap
+                val start = (size.width - totalSize) / 2
+
+                for (row in 0..1) {
+                    for (column in 0..1) {
+                        drawRect(
+                            color = iconColor,
+                            topLeft = Offset(
+                                x = start + column * (cellSize + gap),
+                                y = start + row * (cellSize + gap)
+                            ),
+                            size = Size(cellSize, cellSize),
+                            style = Stroke(stroke)
+                        )
+                    }
                 }
+            } else {
+                val bulletX = 2.dp.toPx()
+                val lineStart = 6.dp.toPx()
+                val lineEnd = 16.dp.toPx()
 
-                val stroke = 1.5.dp.toPx()
+                for (row in 0..2) {
+                    val y = (3 + row * 6).dp.toPx()
 
-                if (mode == GalleryDisplayMode.GRID) {
-                    val cellSize = 6.dp.toPx()
-                    val gap = 3.dp.toPx()
+                    drawCircle(
+                        color = iconColor,
+                        radius = 1.dp.toPx(),
+                        center = Offset(bulletX, y)
+                    )
 
-                    for (row in 0..1) {
-                        for (column in 0..1) {
-                            drawRect(
-                                color = iconColor,
-                                topLeft = Offset(
-                                    x = column * (cellSize + gap),
-                                    y = row * (cellSize + gap)
-                                ),
-                                size = Size(cellSize, cellSize),
-                                style = Stroke(stroke)
-                            )
-                        }
-                    }
-                } else {
-                    val lineStart = 5.dp.toPx()
-                    val lineEnd = 17.dp.toPx()
-
-                    for (row in 0..2) {
-                        val y = (3 + row * 6).dp.toPx()
-
-                        drawCircle(
-                            color = iconColor,
-                            radius = 1.dp.toPx(),
-                            center = Offset(1.dp.toPx(), y)
-                        )
-
-                        drawLine(
-                            color = iconColor,
-                            start = Offset(lineStart, y),
-                            end = Offset(lineEnd, y),
-                            strokeWidth = stroke
-                        )
-                    }
+                    drawLine(
+                        color = iconColor,
+                        start = Offset(lineStart, y),
+                        end = Offset(lineEnd, y),
+                        strokeWidth = stroke
+                    )
                 }
             }
         }
