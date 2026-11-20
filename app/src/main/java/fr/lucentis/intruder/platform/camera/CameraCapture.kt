@@ -13,6 +13,7 @@ import android.media.ImageReader
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Size
+import android.view.OrientationEventListener
 import fr.lucentis.intruder.domain.model.CameraFacing
 import fr.lucentis.intruder.domain.model.CaptureFailureReason
 import fr.lucentis.intruder.domain.model.CaptureResult
@@ -48,17 +49,17 @@ class CameraCapture(
     private var imageReader: ImageReader? = null
     private var captureSession: CameraCaptureSession? = null
 
+    private var orientationEventListener: OrientationEventListener? = null
+
+    @Volatile
+    private var deviceOrientationDegrees = 0
+
     private val finished = AtomicBoolean(false)
 
     @Volatile
     private var currentStage = CaptureStage.CAMERA_INITIALIZATION
 
     private var timeoutRunnable: Runnable? = null
-
-    // companion object {
-    //     // Prevents a capture from remaining blocked indefinitely.
-    //     private const val CAPTURE_TIMEOUT_MS = 15_000L
-    // }
 
     fun start() {
         if (finished.get()) return
@@ -85,6 +86,8 @@ class CameraCapture(
         try {
             currentStage = CaptureStage.CAMERA_INITIALIZATION
 
+            startOrientationTracking()
+
             val cameraManager =
                 appContext.getSystemService(CameraManager::class.java)
 
@@ -108,6 +111,12 @@ class CameraCapture(
 
             val characteristics =
                 cameraManager.getCameraCharacteristics(cameraId)
+
+            val sensorOrientation =
+                characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+
+            val lensFacing =
+                characteristics.get(CameraCharacteristics.LENS_FACING) ?: requestedFacing
 
             val map = characteristics.get(
                 CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
@@ -180,7 +189,11 @@ class CameraCapture(
                         }
 
                         cameraDevice = camera
-                        createCaptureSession(camera)
+                        createCaptureSession(
+                            camera = camera,
+                            sensorOrientation = sensorOrientation,
+                            lensFacing = lensFacing
+                        )
                     }
 
                     override fun onDisconnected(camera: CameraDevice) {
@@ -227,7 +240,41 @@ class CameraCapture(
         }
     }
 
-    
+    private fun startOrientationTracking() {
+        val listener = object : OrientationEventListener(appContext) {
+            override fun onOrientationChanged(orientation: Int) {
+                if (orientation == ORIENTATION_UNKNOWN) return
+
+                // Snap the physical orientation to the nearest 90 degrees.
+                deviceOrientationDegrees =
+                    ((orientation + 45) / 90 * 90) % 360
+            }
+        }
+
+        if (listener.canDetectOrientation()) {
+            orientationEventListener = listener
+            listener.enable()
+        }
+    }
+
+    private fun calculateJpegOrientation(
+        sensorOrientation: Int,
+        lensFacing: Int
+    ): Int {
+        // The front and rear cameras rotate in opposite directions.
+        val sign = if (
+            lensFacing == CameraCharacteristics.LENS_FACING_FRONT
+        ) {
+            1
+        } else {
+            -1
+        }
+
+        return (
+            sensorOrientation + deviceOrientationDegrees * sign + 360
+        ) % 360
+    }
+
     fun cancel() {
         // Camera2 resources must be released on the camera thread.
         val handler = cameraHandler
@@ -246,7 +293,6 @@ class CameraCapture(
         }
     }
 
-
     private fun selectImageSize(sizes: List<Size>?): Size? {
         if (sizes.isNullOrEmpty()) return null
 
@@ -263,7 +309,11 @@ class CameraCapture(
             }
     }
 
-    private fun createCaptureSession(camera: CameraDevice) {
+    private fun createCaptureSession(
+        camera: CameraDevice,
+        sensorOrientation: Int,
+        lensFacing: Int
+    ) {
         if (finished.get()) return
 
         currentStage = CaptureStage.SESSION_CONFIGURATION
@@ -292,13 +342,24 @@ class CameraCapture(
                         try {
                             currentStage = CaptureStage.CAPTURE_REQUEST
 
+                            val jpegOrientation = calculateJpegOrientation(
+                                sensorOrientation = sensorOrientation,
+                                lensFacing = lensFacing
+                            )
+
                             val request = camera.createCaptureRequest(
                                 CameraDevice.TEMPLATE_STILL_CAPTURE
                             ).apply {
                                 addTarget(reader.surface)
+
                                 set(
                                     CaptureRequest.CONTROL_MODE,
                                     CaptureRequest.CONTROL_MODE_AUTO
+                                )
+
+                                set(
+                                    CaptureRequest.JPEG_ORIENTATION,
+                                    jpegOrientation
                                 )
                             }
 
@@ -429,6 +490,10 @@ class CameraCapture(
             cameraHandler?.removeCallbacks(runnable)
         }
         timeoutRunnable = null
+
+        // Stop listening to device orientation once this capture is finished.
+        runCatching { orientationEventListener?.disable() }
+        orientationEventListener = null
 
         // Each resource is closed independently so one cleanup failure
         // does not prevent the remaining resources from being released.
