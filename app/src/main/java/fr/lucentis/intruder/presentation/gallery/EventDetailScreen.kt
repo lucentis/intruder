@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -13,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,6 +33,8 @@ import fr.lucentis.intruder.domain.model.CaptureFailureReason
 import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
+import fr.lucentis.intruder.presentation.theme.IntruderColors
+import fr.lucentis.intruder.presentation.theme.IntruderTypography
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -60,6 +64,12 @@ fun EventDetailScreen(
         CaptureStatus.SUCCESS -> "Photo enregistrée"
         CaptureStatus.FAILED -> "Échec de la capture"
         CaptureStatus.SKIPPED -> "Capture ignorée"
+    }
+
+    val statusColor = when (event.captureStatus) {
+        CaptureStatus.SUCCESS -> IntruderColors.Success
+        CaptureStatus.FAILED -> IntruderColors.Error
+        CaptureStatus.SKIPPED -> IntruderColors.TextSecondary
     }
 
     val failureReason = when (event.failureReason) {
@@ -100,7 +110,7 @@ fun EventDetailScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             if (event.photoPath != null) {
                 AsyncImage(
@@ -109,7 +119,8 @@ fun EventDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 220.dp, max = 420.dp)
-                        .clip(RoundedCornerShape(12.dp)),
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(IntruderColors.SurfaceVariant),
                     contentScale = ContentScale.Fit
                 )
             } else {
@@ -118,12 +129,13 @@ fun EventDetailScreen(
                         .fillMaxWidth()
                         .heightIn(min = 220.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        .background(IntruderColors.SurfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Aucune photo disponible",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = IntruderTypography.Body,
+                        color = IntruderColors.TextSecondary
                     )
                 }
             }
@@ -133,34 +145,41 @@ fun EventDetailScreen(
             ) {
                 Text(
                     text = eventType,
-                    style = MaterialTheme.typography.titleLarge
+                    style = IntruderTypography.Title
                 )
 
                 Text(
                     text = dateTime,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = IntruderTypography.Body,
+                    color = IntruderColors.TextSecondary
                 )
             }
 
             Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(IntruderColors.SurfaceVariant)
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = "État de la capture",
-                    style = MaterialTheme.typography.titleMedium
+                    style = IntruderTypography.TitleSmall,
+                    color = IntruderColors.TextPrimary
                 )
 
                 Text(
                     text = captureStatus,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = IntruderTypography.BodyMedium,
+                    color = statusColor
                 )
 
                 if (failureReason != null) {
                     Text(
                         text = failureReason,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error
+                        style = IntruderTypography.Caption,
+                        color = IntruderColors.Error
                     )
                 }
             }
@@ -168,12 +187,12 @@ fun EventDetailScreen(
             TextButton(
                 onClick = {
                     showDeleteConfirmation = true
-                }
-            ) {
-                Text(
-                    text = "Supprimer",
-                    color = MaterialTheme.colorScheme.error
+                },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = IntruderColors.Error
                 )
+            ) {
+                Text("Supprimer cet événement")
             }
         }
     }
@@ -197,7 +216,10 @@ fun EventDetailScreen(
                     onClick = {
                         showDeleteConfirmation = false
                         onDelete()
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = IntruderColors.Error
+                    )
                 ) {
                     Text("Supprimer")
                 }
@@ -206,7 +228,10 @@ fun EventDetailScreen(
                 TextButton(
                     onClick = {
                         showDeleteConfirmation = false
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = IntruderColors.TextSecondary
+                    )
                 ) {
                     Text("Annuler")
                 }
