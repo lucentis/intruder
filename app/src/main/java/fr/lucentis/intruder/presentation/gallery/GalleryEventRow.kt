@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
+import fr.lucentis.intruder.presentation.theme.IntruderColors
+import fr.lucentis.intruder.presentation.theme.IntruderTypography
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -52,7 +54,7 @@ fun GalleryEventRow(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(4.dp),
+            .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -81,13 +83,13 @@ fun GalleryEventRow(
                     EventType.UNLOCK_SUCCESS -> "Déverrouillage réussi"
                     EventType.UNLOCK_FAILED -> "Tentative échouée"
                 },
-                style = MaterialTheme.typography.titleSmall
+                style = IntruderTypography.TitleSmall
             )
 
             Text(
                 text = time,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = IntruderTypography.Caption,
+                color = IntruderColors.TextSecondary
             )
         }
 
