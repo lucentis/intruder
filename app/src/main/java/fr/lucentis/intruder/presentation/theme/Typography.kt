@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.sp
  * Intruder typography scale, based on the system Roboto font.
  */
 object IntruderTypography {
+
     val Display = TextStyle(
         fontSize = 28.sp,
         fontWeight = FontWeight.SemiBold

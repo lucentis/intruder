@@ -1,34 +1,73 @@
-
 package fr.lucentis.intruder.presentation.gallery
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import fr.lucentis.intruder.presentation.theme.IntruderColors
+import fr.lucentis.intruder.presentation.theme.IntruderTypography
 
 @Composable
 fun GalleryHeader(
     onBack: (() -> Unit)? = null
 ) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        if (onBack != null) {
-            TextButton(onClick = onBack) {
-                Text("←")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (onBack != null) {
+                    TextButton(onClick = onBack) {
+                        Text("←")
+                    }
+                }
+
+                Text(
+                    text = "Intruder",
+                    style = IntruderTypography.Title,
+                    color = IntruderColors.TextPrimary
+                )
+            }
+
+            Surface(
+                color = IntruderColors.SuccessContainer,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "Actif",
+                    modifier = Modifier.padding(
+                        horizontal = 12.dp,
+                        vertical = 6.dp
+                    ),
+                    style = IntruderTypography.Label,
+                    color = IntruderColors.Success
+                )
             }
         }
 
-        Text(
-            text = "Intruder",
-            style = MaterialTheme.typography.headlineMedium
+        HorizontalDivider(
+            color = IntruderColors.Border,
+            thickness = 1.dp
         )
     }
 }
