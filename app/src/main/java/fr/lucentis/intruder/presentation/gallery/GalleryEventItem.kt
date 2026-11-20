@@ -108,11 +108,11 @@ fun GalleryEventItem(
                     .align(Alignment.TopEnd)
                     .padding(6.dp)
                     .background(
-                        MaterialTheme.colorScheme.primary,
+                        IntruderColors.Primary,
                         RoundedCornerShape(50)
                     )
                     .padding(horizontal = 7.dp, vertical = 3.dp),
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = IntruderColors.Primary,
                 style = MaterialTheme.typography.labelMedium
             )
         }

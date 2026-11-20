@@ -1,3 +1,4 @@
+
 package fr.lucentis.intruder.presentation.gallery
 
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +14,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,8 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import fr.lucentis.intruder.domain.gallery.GalleryDisplayMode
 import fr.lucentis.intruder.domain.model.Event
+import fr.lucentis.intruder.presentation.theme.IntruderColors
+import fr.lucentis.intruder.presentation.theme.IntruderTypography
 
-// A Set cannot be put in the saved state directly: it is converted to a list of Longs.
 private val SelectedIdsSaver = listSaver<Set<Long>, Long>(
     save = { it.toList() },
     restore = { it.toSet() }
@@ -48,8 +50,6 @@ fun GalleryScreen(
         mutableStateOf(GalleryFilter.ALL)
     }
 
-    // Saved across configuration changes (rotation, dark mode) and process death, like
-    // the confirmation flag below, so the two never get out of sync.
     var selectedEventIds by rememberSaveable(stateSaver = SelectedIdsSaver) {
         mutableStateOf(emptySet<Long>())
     }
@@ -58,7 +58,6 @@ fun GalleryScreen(
         mutableStateOf(false)
     }
 
-    // Recomputed only when the list or the filter changes, not at every recomposition.
     val filteredEvents = remember(events, selectedFilter) {
         events.filterByGalleryFilter(selectedFilter)
     }
@@ -93,7 +92,8 @@ fun GalleryScreen(
             ) {
                 Text(
                     text = "${selectedEventIds.size} sélectionné${if (selectedEventIds.size > 1) "s" else ""}",
-                    style = MaterialTheme.typography.titleMedium
+                    style = IntruderTypography.TitleSmall,
+                    color = IntruderColors.TextPrimary
                 )
 
                 Row(
@@ -104,7 +104,10 @@ fun GalleryScreen(
                         onClick = {
                             selectedEventIds = selectedEventIds +
                                 filteredEvents.map { it.id }
-                        }
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = IntruderColors.Primary
+                        )
                     ) {
                         Text("Tout sélectionner")
                     }
@@ -112,7 +115,10 @@ fun GalleryScreen(
                     TextButton(
                         onClick = {
                             selectedEventIds = emptySet()
-                        }
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = IntruderColors.TextSecondary
+                        )
                     ) {
                         Text("Terminer")
                     }
@@ -120,7 +126,10 @@ fun GalleryScreen(
                     TextButton(
                         onClick = {
                             showDeleteConfirmation = true
-                        }
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = IntruderColors.Error
+                        )
                     ) {
                         Text("Supprimer")
                     }
@@ -264,7 +273,10 @@ fun GalleryScreen(
                         onDeleteEvents(selectedEventIds.toList())
                         selectedEventIds = emptySet()
                         showDeleteConfirmation = false
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = IntruderColors.Error
+                    )
                 ) {
                     Text("Supprimer")
                 }
@@ -273,7 +285,10 @@ fun GalleryScreen(
                 TextButton(
                     onClick = {
                         showDeleteConfirmation = false
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = IntruderColors.TextSecondary
+                    )
                 ) {
                     Text("Annuler")
                 }

@@ -45,7 +45,7 @@ fun GalleryEventRow(
             .clip(RoundedCornerShape(8.dp))
             .background(
                 if (isSelected) {
-                    MaterialTheme.colorScheme.primaryContainer
+                    IntruderColors.PrimaryContainer
                 } else {
                     MaterialTheme.colorScheme.surface
                 }
@@ -97,7 +97,7 @@ fun GalleryEventRow(
             Text(
                 text = "✓",
                 modifier = Modifier.padding(end = 8.dp),
-                color = MaterialTheme.colorScheme.primary,
+                color = IntruderColors.PrimaryContainer,
                 style = MaterialTheme.typography.titleMedium
             )
         }
