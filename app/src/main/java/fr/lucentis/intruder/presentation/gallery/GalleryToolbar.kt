@@ -68,7 +68,7 @@ fun GalleryToolbar(
                 .height(32.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(IntruderColors.SurfaceVariant)
-                .padding(2.dp),
+                .padding(3.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             GalleryDisplayModeButton(
@@ -126,7 +126,7 @@ private fun GalleryDisplayModeButton(
 
     Box(
         modifier = Modifier
-            .size(28.dp)
+            .size(26.dp)
             .clip(shape)
             .background(
                 color = if (selected) {
