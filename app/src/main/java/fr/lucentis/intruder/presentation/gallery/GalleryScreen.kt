@@ -129,55 +129,12 @@ fun GalleryScreen(
         }
 
         if (!isSelectionMode) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FilterChip(
-                    selected = selectedFilter == GalleryFilter.ALL,
-                    onClick = {
-                        selectedFilter = GalleryFilter.ALL
-                    },
-                    label = { Text("Tous") }
-                )
-
-                FilterChip(
-                    selected = selectedFilter == GalleryFilter.SUCCESS,
-                    onClick = {
-                        selectedFilter = GalleryFilter.SUCCESS
-                    },
-                    label = { Text("Succès") }
-                )
-
-                FilterChip(
-                    selected = selectedFilter == GalleryFilter.FAILED,
-                    onClick = {
-                        selectedFilter = GalleryFilter.FAILED
-                    },
-                    label = { Text("Échecs") }
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                FilterChip(
-                    selected = displayMode == GalleryDisplayMode.GRID,
-                    onClick = {
-                        onDisplayModeChange(GalleryDisplayMode.GRID)
-                    },
-                    label = { Text("Grille") }
-                )
-
-                FilterChip(
-                    selected = displayMode == GalleryDisplayMode.LIST,
-                    onClick = {
-                        onDisplayModeChange(GalleryDisplayMode.LIST)
-                    },
-                    label = { Text("Liste") }
-                )
-            }
+            GalleryToolbar(
+                selectedFilter = selectedFilter,
+                onFilterChange = { selectedFilter = it },
+                displayMode = displayMode,
+                onDisplayModeChange = onDisplayModeChange
+            )
         }
 
         when {
