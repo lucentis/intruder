@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -28,6 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import fr.lucentis.intruder.domain.gallery.GalleryDisplayMode
 import fr.lucentis.intruder.domain.model.Event
+
+// A Set cannot be put in the saved state directly: it is converted to a list of Longs.
+private val SelectedIdsSaver = listSaver<Set<Long>, Long>(
+    save = { it.toList() },
+    restore = { it.toSet() }
+)
 
 @Composable
 fun GalleryScreen(
@@ -41,7 +48,9 @@ fun GalleryScreen(
         mutableStateOf(GalleryFilter.ALL)
     }
 
-    var selectedEventIds by remember {
+    // Saved across configuration changes (rotation, dark mode) and process death, like
+    // the confirmation flag below, so the two never get out of sync.
+    var selectedEventIds by rememberSaveable(stateSaver = SelectedIdsSaver) {
         mutableStateOf(emptySet<Long>())
     }
 
@@ -49,7 +58,11 @@ fun GalleryScreen(
         mutableStateOf(false)
     }
 
-    val filteredEvents = events.filterByGalleryFilter(selectedFilter)
+    // Recomputed only when the list or the filter changes, not at every recomposition.
+    val filteredEvents = remember(events, selectedFilter) {
+        events.filterByGalleryFilter(selectedFilter)
+    }
+    val dateGroups = remember(filteredEvents) { filteredEvents.groupByDate() }
     val isSelectionMode = selectedEventIds.isNotEmpty()
 
     fun toggleSelection(eventId: Long) {
@@ -186,8 +199,6 @@ fun GalleryScreen(
             }
 
             displayMode == GalleryDisplayMode.GRID -> {
-                val dateGroups = filteredEvents.groupByDate()
-
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.fillMaxSize(),
@@ -234,8 +245,6 @@ fun GalleryScreen(
             }
 
             displayMode == GalleryDisplayMode.LIST -> {
-                val dateGroups = filteredEvents.groupByDate()
-
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -277,7 +286,7 @@ fun GalleryScreen(
         }
     }
 
-    if (showDeleteConfirmation) {
+    if (showDeleteConfirmation && selectedEventIds.isNotEmpty()) {
         AlertDialog(
             onDismissRequest = {
                 showDeleteConfirmation = false

@@ -32,19 +32,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import fr.lucentis.intruder.di.AppContainer
+import fr.lucentis.intruder.domain.event.EventPersistenceException
 import fr.lucentis.intruder.domain.event.EventProcessingOutcome
 import fr.lucentis.intruder.domain.model.AppSettings
 import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
+import fr.lucentis.intruder.domain.gallery.GalleryDisplayMode
 import fr.lucentis.intruder.platform.monitoring.FailedUnlockMonitor
 import fr.lucentis.intruder.platform.monitoring.SuccessfulUnlockMonitor
 import fr.lucentis.intruder.presentation.debug.DiagnosticInfo
-import fr.lucentis.intruder.presentation.settings.SettingsScreen
-import fr.lucentis.intruder.domain.gallery.GalleryDisplayMode
-import fr.lucentis.intruder.presentation.gallery.GalleryScreen
 import fr.lucentis.intruder.presentation.debug.DebugScreen
 import fr.lucentis.intruder.presentation.gallery.EventDetailScreen
+import fr.lucentis.intruder.presentation.gallery.GalleryScreen
+import fr.lucentis.intruder.presentation.settings.SettingsScreen
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -200,18 +202,11 @@ fun AppNavigation(container: AppContainer) {
                                 selectedEventId = null
 
                                 scope.launch {
-                                    val result = container.eventRepository.deleteEvents(
-                                        listOf(eventId)
+                                    deleteEventsWithFeedback(
+                                        container = container,
+                                        context = context,
+                                        ids = listOf(eventId)
                                     )
-
-                                    if (result.photoDeletionFailures > 0) {
-                                        Toast.makeText(
-                                            context,
-                                            "${result.deletedEvents} événement supprimé, " +
-                                                "mais la photo n'a pas pu être supprimée.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
                                 }
                             }
                         )
@@ -229,16 +224,11 @@ fun AppNavigation(container: AppContainer) {
                             },
                             onDeleteEvents = { ids ->
                                 scope.launch {
-                                    val result = container.eventRepository.deleteEvents(ids)
-
-                                    if (result.photoDeletionFailures > 0) {
-                                        Toast.makeText(
-                                            context,
-                                            "${result.deletedEvents} événement(s) supprimé(s), " +
-                                                "mais ${result.photoDeletionFailures} photo(s) n'ont pas pu être supprimées.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
+                                    deleteEventsWithFeedback(
+                                        container = container,
+                                        context = context,
+                                        ids = ids
+                                    )
                                 }
                             }
                         )
@@ -329,12 +319,15 @@ fun AppNavigation(container: AppContainer) {
                             }
                         },
                         onDeleteTestEvent = {
-                            // A delegated property cannot be smart-cast, hence the local copy.
                             val id = lastTestEventId
 
                             if (id != null) {
                                 scope.launch {
-                                    container.eventRepository.deleteEvents(listOf(id))
+                                    deleteEventsWithFeedback(
+                                        container = container,
+                                        context = context,
+                                        ids = listOf(id)
+                                    )
                                     lastTestEventId = null
                                 }
                             }
@@ -374,5 +367,45 @@ private suspend fun synchronizeSuccessfulUnlockMonitor(
         ContextCompat.startForegroundService(context, serviceIntent)
     } else {
         context.stopService(serviceIntent)
+    }
+}
+
+// Deletes events and tells the user when something went wrong, instead of crashing.
+private suspend fun deleteEventsWithFeedback(
+    container: AppContainer,
+    context: Context,
+    ids: List<Long>
+) {
+    try {
+        val result = container.eventRepository.deleteEvents(ids)
+        val failures = result.photoDeletionFailures
+
+        if (failures > 0) {
+            val deleted = if (result.deletedEvents > 1) {
+                "événements supprimés"
+            } else {
+                "événement supprimé"
+            }
+
+            val photos = if (failures > 1) {
+                "photos n'ont pas pu être supprimées"
+            } else {
+                "photo n'a pas pu être supprimée"
+            }
+
+            Toast.makeText(
+                context,
+                "${result.deletedEvents} $deleted, mais $failures $photos.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: EventPersistenceException) {
+        Toast.makeText(
+            context,
+            "La suppression a échoué. Réessayez.",
+            Toast.LENGTH_LONG
+        ).show()
     }
 }

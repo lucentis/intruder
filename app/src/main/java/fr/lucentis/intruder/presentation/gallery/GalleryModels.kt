@@ -2,10 +2,11 @@ package fr.lucentis.intruder.presentation.gallery
 
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
-import java.text.SimpleDateFormat
-import java.util.Date
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.Calendar
 
 enum class GalleryFilter {
     ALL,
@@ -26,40 +27,30 @@ fun List<Event>.filterByGalleryFilter(filter: GalleryFilter): List<Event> {
     }
 }
 
-fun List<Event>.groupByDate(): List<GalleryDateGroup> {
-    val today = Calendar.getInstance()
-    val yesterday = (today.clone() as Calendar).apply {
-        add(Calendar.DAY_OF_YEAR, -1)
-    }
-
-    val dateFormat = SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
+// Groups the events by calendar day in the device time zone, keeping the order of the list
+// (newest first). LocalDate is a plain value that is cheap to create and to compare, unlike
+// a Calendar. The zone, today's date and the locale are parameters so that the function can
+// be tested with fixed values.
+fun List<Event>.groupByDate(
+    zone: ZoneId = ZoneId.systemDefault(),
+    today: LocalDate = LocalDate.now(zone),
+    locale: Locale = Locale.getDefault()
+): List<GalleryDateGroup> {
+    val yesterday = today.minusDays(1)
+    val formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", locale)
 
     return groupBy { event ->
-        Calendar.getInstance().apply {
-            timeInMillis = event.timestamp
-        }.get(Calendar.YEAR) to Calendar.getInstance().apply {
-            timeInMillis = event.timestamp
-        }.get(Calendar.DAY_OF_YEAR)
-    }.map { (dateKey, events) ->
-        val eventDate = Calendar.getInstance().apply {
-            timeInMillis = events.first().timestamp
-        }
-
-        val label = when {
-            eventDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-                eventDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) ->
-                "Aujourd'hui"
-
-            eventDate.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) &&
-                eventDate.get(Calendar.DAY_OF_YEAR) == yesterday.get(Calendar.DAY_OF_YEAR) ->
-                "Hier"
-
-            else -> dateFormat.format(Date(events.first().timestamp))
+        Instant.ofEpochMilli(event.timestamp).atZone(zone).toLocalDate()
+    }.map { (date, dayEvents) ->
+        val label = when (date) {
+            today -> "Aujourd'hui"
+            yesterday -> "Hier"
+            else -> date.format(formatter)
         }
 
         GalleryDateGroup(
             date = label,
-            events = events
+            events = dayEvents
         )
     }
 }
