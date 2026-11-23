@@ -10,9 +10,14 @@ private val IntruderLightColorScheme = lightColorScheme(
     onPrimary = IntruderColors.OnPrimary,
     primaryContainer = IntruderColors.PrimaryContainer,
     secondary = IntruderColors.PrimaryVariant,
+    secondaryContainer = IntruderColors.PrimaryContainer,
+    onSecondaryContainer = IntruderColors.PrimaryVariant,
     background = IntruderColors.Background,
+    onBackground = IntruderColors.TextPrimary,
     surface = IntruderColors.Surface,
+    onSurface = IntruderColors.TextPrimary,
     surfaceVariant = IntruderColors.SurfaceVariant,
+    onSurfaceVariant = IntruderColors.TextSecondary,
     error = IntruderColors.Error,
     outline = IntruderColors.Border
 )
@@ -30,7 +35,8 @@ private val IntruderMaterialTypography = Typography().copy(
 /**
  * Intruder Material 3 theme.
  *
- * Screens can adopt it progressively.
+ * Material components that are not styled explicitly (dialogs, date picker, navigation
+ * bar) read their colors from this scheme.
  */
 @Composable
 fun IntruderTheme(

@@ -1,44 +1,53 @@
-
 package fr.lucentis.intruder.presentation.gallery
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.RemoveCircleOutline
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import fr.lucentis.intruder.domain.model.CaptureFailureReason
 import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
-import fr.lucentis.intruder.domain.model.EventType
 import fr.lucentis.intruder.presentation.theme.IntruderColors
 import fr.lucentis.intruder.presentation.theme.IntruderTypography
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun EventDetailScreen(
@@ -50,192 +59,221 @@ fun EventDetailScreen(
         mutableStateOf(false)
     }
 
-    val dateTime = SimpleDateFormat(
-        "dd/MM/yyyy 'à' HH:mm:ss",
-        Locale.getDefault()
-    ).format(Date(event.timestamp))
+    Column(modifier = Modifier.fillMaxSize()) {
+        DetailTopBar(onBack = onBack)
 
-    val eventType = when (event.type) {
-        EventType.UNLOCK_SUCCESS -> "Déverrouillage réussi"
-        EventType.UNLOCK_FAILED -> "Tentative échouée"
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            EventPhoto(event = event)
+
+            EventSummary(event = event)
+
+            CaptureStatusCard(event = event)
+
+            Button(
+                onClick = { showDeleteConfirmation = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = IntruderColors.Surface,
+                    contentColor = IntruderColors.Error
+                ),
+                border = BorderStroke(1.dp, IntruderColors.Border)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = "Supprimer cet événement",
+                    style = IntruderTypography.BodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
+        }
     }
 
-    val captureStatus = when (event.captureStatus) {
-        CaptureStatus.SUCCESS -> "Photo enregistrée"
-        CaptureStatus.FAILED -> "Échec de la capture"
-        CaptureStatus.SKIPPED -> "Capture ignorée"
+    if (showDeleteConfirmation) {
+        DeleteEventsDialog(
+            count = 1,
+            onConfirm = {
+                showDeleteConfirmation = false
+                onDelete()
+            },
+            onDismiss = { showDeleteConfirmation = false }
+        )
     }
+}
 
+@Composable
+private fun DetailTopBar(onBack: () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Retour",
+                    modifier = Modifier.size(24.dp),
+                    tint = IntruderColors.TextPrimary
+                )
+            }
+
+            Text(
+                text = "Événement",
+                modifier = Modifier.padding(start = 4.dp),
+                style = IntruderTypography.Title,
+                color = IntruderColors.TextPrimary
+            )
+        }
+
+        HorizontalDivider(color = IntruderColors.Border)
+    }
+}
+
+@Composable
+private fun EventPhoto(event: Event) {
+    val photoPath = event.photoPath
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 220.dp, max = 420.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(IntruderColors.SurfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        if (photoPath != null) {
+            // Fit shows the whole picture; the letterbox takes the secondary surface color.
+            AsyncImage(
+                model = File(photoPath),
+                contentDescription = "Photo de l'événement",
+                modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.Fit
+            )
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Image,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = IntruderColors.TextTertiary
+                )
+
+                Text(
+                    text = "Aucune photo disponible",
+                    style = IntruderTypography.Body,
+                    color = IntruderColors.TextSecondary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EventSummary(event: Event) {
+    val dateTime = remember(event.timestamp) { formatDateTime(event.timestamp) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = event.type.displayName(),
+            style = IntruderTypography.Headline,
+            color = IntruderColors.TextPrimary
+        )
+
+        Text(
+            text = dateTime,
+            style = IntruderTypography.Body,
+            color = IntruderColors.TextSecondary
+        )
+    }
+}
+
+// The status is always written and paired with an icon, so it never relies on color alone.
+@Composable
+private fun CaptureStatusCard(event: Event) {
     val statusColor = when (event.captureStatus) {
         CaptureStatus.SUCCESS -> IntruderColors.Success
         CaptureStatus.FAILED -> IntruderColors.Error
         CaptureStatus.SKIPPED -> IntruderColors.TextSecondary
     }
 
-    val failureReason = when (event.failureReason) {
-        CaptureFailureReason.PERMISSION_MISSING ->
-            "Permission caméra manquante"
-
-        CaptureFailureReason.CAMERA_UNAVAILABLE ->
-            "Caméra indisponible"
-
-        CaptureFailureReason.CAMERA_BUSY ->
-            "Caméra occupée"
-
-        CaptureFailureReason.CAMERA_DISCONNECTED ->
-            "Caméra déconnectée"
-
-        CaptureFailureReason.CAMERA_ERROR ->
-            "Erreur de caméra"
-
-        CaptureFailureReason.CAPTURE_FAILED ->
-            "La prise de photo a échoué"
-
-        CaptureFailureReason.SAVE_FAILED ->
-            "L'enregistrement de la photo a échoué"
-
-        null -> null
+    val statusIcon = when (event.captureStatus) {
+        CaptureStatus.SUCCESS -> Icons.Outlined.CheckCircle
+        CaptureStatus.FAILED -> Icons.Outlined.ErrorOutline
+        CaptureStatus.SKIPPED -> Icons.Outlined.RemoveCircleOutline
     }
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(IntruderColors.Surface)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        GalleryHeader(onBack = onBack)
+        Text(
+            text = "État de la capture",
+            style = IntruderTypography.TitleSmall,
+            color = IntruderColors.TextPrimary
+        )
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (event.photoPath != null) {
-                AsyncImage(
-                    model = File(event.photoPath),
-                    contentDescription = "Photo de l'événement",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 220.dp, max = 420.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(IntruderColors.SurfaceVariant),
-                    contentScale = ContentScale.Fit
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 220.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(IntruderColors.SurfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Aucune photo disponible",
-                        style = IntruderTypography.Body,
-                        color = IntruderColors.TextSecondary
-                    )
-                }
-            }
+            Icon(
+                imageVector = statusIcon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = statusColor
+            )
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = eventType,
-                    style = IntruderTypography.Title
-                )
+            Text(
+                text = event.captureStatus.displayName(),
+                style = IntruderTypography.BodyMedium,
+                color = statusColor
+            )
+        }
 
+        event.failureReason?.let { reason ->
+            HorizontalDivider(color = IntruderColors.Border)
+
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = dateTime,
-                    style = IntruderTypography.Body,
+                    text = "Motif",
+                    style = IntruderTypography.Label,
                     color = IntruderColors.TextSecondary
                 )
-            }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(IntruderColors.SurfaceVariant)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
                 Text(
-                    text = "État de la capture",
-                    style = IntruderTypography.TitleSmall,
+                    text = reason.displayName(),
+                    style = IntruderTypography.Body,
                     color = IntruderColors.TextPrimary
                 )
-
-                Text(
-                    text = captureStatus,
-                    style = IntruderTypography.BodyMedium,
-                    color = statusColor
-                )
-
-                if (failureReason != null) {
-                    Text(
-                        text = failureReason,
-                        style = IntruderTypography.Caption,
-                        color = IntruderColors.Error
-                    )
-                }
-            }
-
-            TextButton(
-                onClick = {
-                    showDeleteConfirmation = true
-                },
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = IntruderColors.Error
-                )
-            ) {
-                Text("Supprimer cet événement")
             }
         }
-    }
-
-    if (showDeleteConfirmation) {
-        AlertDialog(
-            onDismissRequest = {
-                showDeleteConfirmation = false
-            },
-            title = {
-                Text("Supprimer cet événement ?")
-            },
-            text = {
-                Text(
-                    "Voulez-vous supprimer définitivement cet événement " +
-                        "ainsi que la photo associée ?"
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteConfirmation = false
-                        onDelete()
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = IntruderColors.Error
-                    )
-                ) {
-                    Text("Supprimer")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteConfirmation = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = IntruderColors.TextSecondary
-                    )
-                ) {
-                    Text("Annuler")
-                }
-            }
-        )
     }
 }
