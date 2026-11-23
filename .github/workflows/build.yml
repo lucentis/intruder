@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - claude
+      - gpt
   pull_request:
   workflow_dispatch:
 
