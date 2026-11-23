@@ -235,12 +235,58 @@ fun AppNavigation(container: AppContainer) {
                     }
                 }
 
-                1 -> Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                ) {
+                
+                1 -> {
                     SettingsScreen(
+                        settings = settings,
+                        onToggleGlobalProtection = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        globalProtectionEnabled = !it.globalProtectionEnabled
+                                    )
+                                }
+
+                                synchronizeSuccessfulUnlockMonitor(context, container)
+                            }
+                        },
+                        onToggleFailedAttempts = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        monitorFailedAttempts = !it.monitorFailedAttempts
+                                    )
+                                }
+                            }
+                        },
+                        onToggleSuccessfulUnlocks = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        monitorSuccessfulUnlocks =
+                                            !it.monitorSuccessfulUnlocks
+                                    )
+                                }
+
+                                synchronizeSuccessfulUnlockMonitor(context, container)
+                            }
+                        },
+                        onToggleAutomaticCapture = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        automaticCaptureEnabled = !it.automaticCaptureEnabled
+                                    )
+                                }
+                            }
+                        }
+                    )
+                }
+
+                2 -> {
+                    DebugScreen(
+                        latestEvent = latestEvent,
+                        diagnostic = diagnosticInfo,
                         settings = settings,
                         isAdminActive = isAdminActive,
                         hasCameraPermission = hasCameraPermission,
@@ -323,11 +369,7 @@ fun AppNavigation(container: AppContainer) {
 
                             if (id != null) {
                                 scope.launch {
-                                    deleteEventsWithFeedback(
-                                        container = container,
-                                        context = context,
-                                        ids = listOf(id)
-                                    )
+                                    container.eventRepository.deleteEvents(listOf(id))
                                     lastTestEventId = null
                                 }
                             }
@@ -335,16 +377,6 @@ fun AppNavigation(container: AppContainer) {
                     )
                 }
 
-                2 -> Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    DebugScreen(
-                        latestEvent = latestEvent,
-                        diagnostic = diagnosticInfo
-                    )
-                }
             }
         }
     }
