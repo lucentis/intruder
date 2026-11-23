@@ -18,6 +18,8 @@ import fr.lucentis.intruder.presentation.settings.screens.TechnicalNotifications
 fun SettingsNavigation(
     navController: NavHostController,
     settings: AppSettings,
+    isAdminActive: Boolean,
+    onActivateAdmin: () -> Unit,
     onToggleGlobalProtection: () -> Unit,
     onToggleFailedAttempts: () -> Unit,
     onToggleSuccessfulUnlocks: () -> Unit
@@ -46,7 +48,9 @@ fun SettingsNavigation(
         composable(SettingsDestination.MONITORING.route) {
             MonitoringScreen(
                 settings = settings,
+                isAdminActive = isAdminActive,
                 onBack = { navController.popBackStack() },
+                onActivateAdmin = onActivateAdmin,
                 onToggleFailedAttempts = onToggleFailedAttempts,
                 onToggleSuccessfulUnlocks = onToggleSuccessfulUnlocks
             )

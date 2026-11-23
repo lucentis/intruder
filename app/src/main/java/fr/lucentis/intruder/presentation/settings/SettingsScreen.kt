@@ -8,6 +8,8 @@ import fr.lucentis.intruder.domain.model.AppSettings
 @Composable
 fun SettingsScreen(
     settings: AppSettings,
+    isAdminActive: Boolean,
+    onActivateAdmin: () -> Unit,
     onToggleGlobalProtection: () -> Unit,
     onToggleFailedAttempts: () -> Unit,
     onToggleSuccessfulUnlocks: () -> Unit
@@ -17,6 +19,8 @@ fun SettingsScreen(
     SettingsNavigation(
         navController = navController,
         settings = settings,
+        isAdminActive = isAdminActive,
+        onActivateAdmin = onActivateAdmin,
         onToggleGlobalProtection = onToggleGlobalProtection,
         onToggleFailedAttempts = onToggleFailedAttempts,
         onToggleSuccessfulUnlocks = onToggleSuccessfulUnlocks
