@@ -240,6 +240,7 @@ fun AppNavigation(container: AppContainer) {
                     SettingsScreen(
                         settings = settings,
                         isAdminActive = isAdminActive,
+                        hasCameraPermission = hasCameraPermission,
                         onActivateAdmin = {
                             val intent = Intent(
                                 DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN
@@ -255,6 +256,9 @@ fun AppNavigation(container: AppContainer) {
                             }
 
                             adminActivationLauncher.launch(intent)
+                        },
+                        onRequestCameraPermission = {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                         },
                         onToggleGlobalProtection = {
                             scope.launch {
@@ -286,6 +290,15 @@ fun AppNavigation(container: AppContainer) {
                                 }
 
                                 synchronizeSuccessfulUnlockMonitor(context, container)
+                            }
+                        },
+                        onToggleAutomaticCapture = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        automaticCaptureEnabled = !it.automaticCaptureEnabled
+                                    )
+                                }
                             }
                         }
                     )

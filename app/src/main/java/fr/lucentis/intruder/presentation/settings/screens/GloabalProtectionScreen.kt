@@ -67,7 +67,15 @@ fun GlobalProtectionScreen(
 
                     Switch(
                         checked = settings.globalProtectionEnabled,
-                        onCheckedChange = { onToggleGlobalProtection() }
+                        onCheckedChange = { onToggleGlobalProtection() },
+                        colors = androidx.compose.material3.SwitchDefaults.colors(
+                            checkedThumbColor = IntruderColors.OnPrimary,
+                            checkedTrackColor = IntruderColors.Primary,
+                            checkedBorderColor = IntruderColors.Primary,
+                            uncheckedThumbColor = IntruderColors.TextTertiary,
+                            uncheckedTrackColor = IntruderColors.SurfaceVariant,
+                            uncheckedBorderColor = IntruderColors.Border
+                        )
                     )
                 }
 

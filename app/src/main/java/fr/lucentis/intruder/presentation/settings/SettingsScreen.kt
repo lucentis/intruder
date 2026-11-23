@@ -1,4 +1,3 @@
-
 package fr.lucentis.intruder.presentation.settings
 
 import androidx.compose.runtime.Composable
@@ -9,10 +8,13 @@ import fr.lucentis.intruder.domain.model.AppSettings
 fun SettingsScreen(
     settings: AppSettings,
     isAdminActive: Boolean,
+    hasCameraPermission: Boolean,
     onActivateAdmin: () -> Unit,
+    onRequestCameraPermission: () -> Unit,
     onToggleGlobalProtection: () -> Unit,
     onToggleFailedAttempts: () -> Unit,
-    onToggleSuccessfulUnlocks: () -> Unit
+    onToggleSuccessfulUnlocks: () -> Unit,
+    onToggleAutomaticCapture: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -20,9 +22,12 @@ fun SettingsScreen(
         navController = navController,
         settings = settings,
         isAdminActive = isAdminActive,
+        hasCameraPermission = hasCameraPermission,
         onActivateAdmin = onActivateAdmin,
+        onRequestCameraPermission = onRequestCameraPermission,
         onToggleGlobalProtection = onToggleGlobalProtection,
         onToggleFailedAttempts = onToggleFailedAttempts,
-        onToggleSuccessfulUnlocks = onToggleSuccessfulUnlocks
+        onToggleSuccessfulUnlocks = onToggleSuccessfulUnlocks,
+        onToggleAutomaticCapture = onToggleAutomaticCapture
     )
 }

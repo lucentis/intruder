@@ -1,4 +1,3 @@
-
 package fr.lucentis.intruder.presentation.settings
 
 import androidx.compose.runtime.Composable
@@ -19,10 +18,13 @@ fun SettingsNavigation(
     navController: NavHostController,
     settings: AppSettings,
     isAdminActive: Boolean,
+    hasCameraPermission: Boolean,
     onActivateAdmin: () -> Unit,
+    onRequestCameraPermission: () -> Unit,
     onToggleGlobalProtection: () -> Unit,
     onToggleFailedAttempts: () -> Unit,
-    onToggleSuccessfulUnlocks: () -> Unit
+    onToggleSuccessfulUnlocks: () -> Unit,
+    onToggleAutomaticCapture: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -58,7 +60,11 @@ fun SettingsNavigation(
 
         composable(SettingsDestination.PHOTO_CAPTURE.route) {
             PhotoCaptureScreen(
-                onBack = { navController.popBackStack() }
+                settings = settings,
+                hasCameraPermission = hasCameraPermission,
+                onBack = { navController.popBackStack() },
+                onRequestCameraPermission = onRequestCameraPermission,
+                onToggleAutomaticCapture = onToggleAutomaticCapture
             )
         }
 
