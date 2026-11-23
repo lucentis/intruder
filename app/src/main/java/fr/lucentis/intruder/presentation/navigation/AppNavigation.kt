@@ -270,15 +270,6 @@ fun AppNavigation(container: AppContainer) {
 
                                 synchronizeSuccessfulUnlockMonitor(context, container)
                             }
-                        },
-                        onToggleAutomaticCapture = {
-                            scope.launch {
-                                container.settingsRepository.update {
-                                    it.copy(
-                                        automaticCaptureEnabled = !it.automaticCaptureEnabled
-                                    )
-                                }
-                            }
                         }
                     )
                 }
