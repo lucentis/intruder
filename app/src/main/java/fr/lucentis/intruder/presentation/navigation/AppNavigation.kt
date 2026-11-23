@@ -170,7 +170,6 @@ fun AppNavigation(container: AppContainer) {
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
             NavigationBar(
-                modifier = Modifier.height(72.dp),
                 containerColor = IntruderColors.Surface,
                 contentColor = IntruderColors.TextPrimary,
                 tonalElevation = 0.dp
