@@ -194,6 +194,7 @@ fun GalleryScreen(
                             GalleryEventItem(
                                 event = event,
                                 isSelected = event.id in selectedEventIds,
+                                isSelectionMode = isSelectionMode,
                                 onClick = {
                                     if (isSelectionMode) {
                                         toggleSelection(event.id)

@@ -2,11 +2,14 @@
 package fr.lucentis.intruder.presentation.gallery
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,6 +33,7 @@ import java.util.Locale
 fun GalleryEventItem(
     event: Event,
     isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -98,23 +102,46 @@ fun GalleryEventItem(
                 modifier = Modifier
                     .matchParentSize()
                     .background(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                        IntruderColors.Primary.copy(alpha = 0.22f)
                     )
             )
+        }
 
-            Text(
-                text = "✓",
+        if (isSelectionMode) {
+            Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(6.dp)
+                    .padding(8.dp)
+                    .size(24.dp)
+                    .clip(CircleShape)
                     .background(
-                        IntruderColors.Primary,
-                        RoundedCornerShape(50)
+                        if (isSelected) {
+                            IntruderColors.Primary
+                        } else {
+                            Color.White.copy(alpha = 0.9f)
+                        }
                     )
-                    .padding(horizontal = 7.dp, vertical = 3.dp),
-                color = IntruderColors.Primary,
-                style = MaterialTheme.typography.labelMedium
-            )
+                    .then(
+                        if (isSelected) {
+                            Modifier
+                        } else {
+                            Modifier.border(
+                                width = 1.5.dp,
+                                color = IntruderColors.Primary,
+                                shape = CircleShape
+                            )
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isSelected) {
+                    Text(
+                        text = "✓",
+                        color = IntruderColors.OnPrimary,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
         }
     }
 }

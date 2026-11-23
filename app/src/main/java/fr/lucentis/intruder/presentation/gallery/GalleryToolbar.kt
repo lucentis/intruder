@@ -149,7 +149,7 @@ private fun GalleryDisplayModeButton(
             } else {
                 "Affichage en liste"
             },
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(20.dp),
             tint = if (selected) {
                 IntruderColors.OnPrimary
             } else {
