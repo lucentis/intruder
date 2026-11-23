@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.fillMaxSize
 import fr.lucentis.intruder.di.AppContainer
 import fr.lucentis.intruder.presentation.navigation.AppNavigation
+import fr.lucentis.intruder.presentation.theme.IntruderTheme
 
 /**
  * An Activity is a screen entry point that the system creates and destroys through a
@@ -30,8 +31,11 @@ class MainActivity : ComponentActivity() {
 
         // setContent replaces the old XML layouts: the lambda describes the UI in Compose.
         setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+            IntruderTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     AppNavigation(container)
                 }
             }

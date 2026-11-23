@@ -28,4 +28,8 @@ object IntruderColors {
 
     val Error = Color(0xFFC95757)
     val Info = Color(0xFF64748B)
+
+    // Neutral gradient shown behind photos that are missing or still loading.
+    val PhotoPlaceholderStart = Color(0xFFDADADD)
+    val PhotoPlaceholderEnd = Color(0xFFC9C9CE)
 }
