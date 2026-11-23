@@ -11,13 +11,19 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +36,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import fr.lucentis.intruder.di.AppContainer
 import fr.lucentis.intruder.domain.event.EventPersistenceException
@@ -46,6 +54,7 @@ import fr.lucentis.intruder.presentation.debug.DebugScreen
 import fr.lucentis.intruder.presentation.gallery.EventDetailScreen
 import fr.lucentis.intruder.presentation.gallery.GalleryScreen
 import fr.lucentis.intruder.presentation.settings.SettingsScreen
+import fr.lucentis.intruder.presentation.theme.IntruderColors
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -160,26 +169,75 @@ fun AppNavigation(container: AppContainer) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                modifier = Modifier.height(72.dp),
+                containerColor = IntruderColors.Surface,
+                contentColor = IntruderColors.TextPrimary,
+                tonalElevation = 0.dp
+            ) {
+                val navigationColors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = IntruderColors.PrimaryVariant,
+                    selectedTextColor = IntruderColors.PrimaryVariant,
+                    indicatorColor = IntruderColors.PrimaryContainer,
+                    unselectedIconColor = IntruderColors.TextTertiary,
+                    unselectedTextColor = IntruderColors.TextSecondary
+                )
+
                 NavigationBarItem(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    icon = { Text("⌂") },
-                    label = { Text("Accueil") }
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = null,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = "Galerie",
+                            fontSize = 12.sp
+                        )
+                    },
+                    colors = navigationColors
                 )
 
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    icon = { Text("⚙") },
-                    label = { Text("Réglages") }
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = "Réglages",
+                            fontSize = 12.sp
+                        )
+                    },
+                    colors = navigationColors
                 )
 
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
-                    icon = { Text("⚙") },
-                    label = { Text("Debug") }
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.BugReport,
+                            contentDescription = null,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = "Debug",
+                            fontSize = 12.sp
+                        )
+                    },
+                    colors = navigationColors
                 )
             }
         }
@@ -235,7 +293,6 @@ fun AppNavigation(container: AppContainer) {
                     }
                 }
 
-                
                 1 -> {
                     SettingsScreen(
                         settings = settings,
@@ -424,7 +481,6 @@ fun AppNavigation(container: AppContainer) {
                         }
                     )
                 }
-
             }
         }
     }

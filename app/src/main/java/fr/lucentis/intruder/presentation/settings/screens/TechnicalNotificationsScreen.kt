@@ -1,3 +1,4 @@
+
 package fr.lucentis.intruder.presentation.settings.screens
 
 import androidx.compose.foundation.layout.Arrangement
@@ -7,9 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -42,7 +41,9 @@ fun TechnicalNotificationsScreen(
 
         SettingsCategoryCard {
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 TechnicalNotificationRow(
@@ -65,19 +66,16 @@ fun TechnicalNotificationsScreen(
 
                 TechnicalNotificationRow(
                     title = "Problème de capture",
-                    description = "Signaler lorsqu'une photo n'a pas pu être prise.",
+                    description = "Signaler lorsqu'une photo n'a pas pu être prise ou enregistrée.",
                     checked = settings.notifyCaptureProblem,
                     onCheckedChange = onToggleCaptureProblem
                 )
             }
         }
 
-        Surface(
-            color = IntruderColors.SurfaceVariant,
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-        ) {
+        SettingsCategoryCard {
             Text(
-                text = "Ces réglages contrôlent uniquement l'affichage des notifications. La surveillance, les captures et l'enregistrement des événements continuent de fonctionner.",
+                text = "Désactiver une notification masque uniquement son affichage. La surveillance, les captures et la détection des problèmes continuent de fonctionner.",
                 modifier = Modifier.padding(16.dp),
                 style = IntruderTypography.Body,
                 color = IntruderColors.TextSecondary
@@ -117,7 +115,7 @@ private fun TechnicalNotificationRow(
         Switch(
             checked = checked,
             onCheckedChange = { onCheckedChange() },
-            colors = SwitchDefaults.colors(
+            colors = androidx.compose.material3.SwitchDefaults.colors(
                 checkedThumbColor = IntruderColors.OnPrimary,
                 checkedTrackColor = IntruderColors.Primary,
                 checkedBorderColor = IntruderColors.Primary,
