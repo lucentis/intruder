@@ -14,7 +14,10 @@ fun SettingsScreen(
     onToggleGlobalProtection: () -> Unit,
     onToggleFailedAttempts: () -> Unit,
     onToggleSuccessfulUnlocks: () -> Unit,
-    onToggleAutomaticCapture: () -> Unit
+    onToggleAutomaticCapture: () -> Unit,
+    onToggleProtectionInterrupted: () -> Unit,
+    onToggleMissingPermission: () -> Unit,
+    onToggleCaptureProblem: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -28,6 +31,9 @@ fun SettingsScreen(
         onToggleGlobalProtection = onToggleGlobalProtection,
         onToggleFailedAttempts = onToggleFailedAttempts,
         onToggleSuccessfulUnlocks = onToggleSuccessfulUnlocks,
-        onToggleAutomaticCapture = onToggleAutomaticCapture
+        onToggleAutomaticCapture = onToggleAutomaticCapture,
+        onToggleProtectionInterrupted = onToggleProtectionInterrupted,
+        onToggleMissingPermission = onToggleMissingPermission,
+        onToggleCaptureProblem = onToggleCaptureProblem
     )
 }

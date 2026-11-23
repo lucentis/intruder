@@ -24,7 +24,10 @@ fun SettingsNavigation(
     onToggleGlobalProtection: () -> Unit,
     onToggleFailedAttempts: () -> Unit,
     onToggleSuccessfulUnlocks: () -> Unit,
-    onToggleAutomaticCapture: () -> Unit
+    onToggleAutomaticCapture: () -> Unit,
+    onToggleProtectionInterrupted: () -> Unit,
+    onToggleMissingPermission: () -> Unit,
+    onToggleCaptureProblem: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -70,7 +73,11 @@ fun SettingsNavigation(
 
         composable(SettingsDestination.TECHNICAL_NOTIFICATIONS.route) {
             TechnicalNotificationsScreen(
-                onBack = { navController.popBackStack() }
+                settings = settings,
+                onBack = { navController.popBackStack() },
+                onToggleProtectionInterrupted = onToggleProtectionInterrupted,
+                onToggleMissingPermission = onToggleMissingPermission,
+                onToggleCaptureProblem = onToggleCaptureProblem
             )
         }
 

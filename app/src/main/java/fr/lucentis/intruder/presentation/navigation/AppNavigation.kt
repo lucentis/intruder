@@ -300,6 +300,33 @@ fun AppNavigation(container: AppContainer) {
                                     )
                                 }
                             }
+                        },
+                        onToggleProtectionInterrupted = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        notifyProtectionInterrupted = !it.notifyProtectionInterrupted
+                                    )
+                                }
+                            }
+                        },
+                        onToggleMissingPermission = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        notifyMissingPermission = !it.notifyMissingPermission
+                                    )
+                                }
+                            }
+                        },
+                        onToggleCaptureProblem = {
+                            scope.launch {
+                                container.settingsRepository.update {
+                                    it.copy(
+                                        notifyCaptureProblem = !it.notifyCaptureProblem
+                                    )
+                                }
+                            }
                         }
                     )
                 }
