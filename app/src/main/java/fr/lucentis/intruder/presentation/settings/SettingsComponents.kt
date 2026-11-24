@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import fr.lucentis.intruder.presentation.common.FeatureState
 import fr.lucentis.intruder.presentation.theme.IntruderColors
 import fr.lucentis.intruder.presentation.theme.IntruderTypography
 
@@ -54,14 +55,15 @@ enum class BadgeKind { POSITIVE, NEUTRAL, WARNING }
 
 internal fun FeatureState.badgeKind(): BadgeKind = when (this) {
     FeatureState.ACTIVE -> BadgeKind.POSITIVE
-    FeatureState.INACTIVE -> BadgeKind.NEUTRAL
     FeatureState.WARNING -> BadgeKind.WARNING
+    FeatureState.INACTIVE, FeatureState.DISABLED -> BadgeKind.NEUTRAL
 }
 
 internal fun FeatureState.badgeText(feminine: Boolean): String = when (this) {
     FeatureState.ACTIVE -> if (feminine) "Activée" else "Activé"
-    FeatureState.INACTIVE -> if (feminine) "Désactivée" else "Désactivé"
     FeatureState.WARNING -> "Attention"
+    FeatureState.INACTIVE -> if (feminine) "Inactive" else "Inactif"
+    FeatureState.DISABLED -> if (feminine) "Désactivée" else "Désactivé"
 }
 
 @Composable

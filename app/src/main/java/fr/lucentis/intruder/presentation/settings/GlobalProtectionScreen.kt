@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import fr.lucentis.intruder.domain.model.AppSettings
+import fr.lucentis.intruder.presentation.common.FeatureState
 import fr.lucentis.intruder.presentation.theme.IntruderColors
 import fr.lucentis.intruder.presentation.theme.IntruderTypography
 
@@ -37,11 +38,23 @@ fun GlobalProtectionScreen(
                 iconTint = IntruderColors.Success
             )
 
-            Box(modifier = Modifier.padding(start = 52.dp, bottom = 12.dp)) {
+            Row(
+                modifier = Modifier.padding(start = 52.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 StatusBadge(
                     text = overview.global.badgeText(feminine = true),
                     kind = overview.global.badgeKind()
                 )
+
+                if (overview.global == FeatureState.INACTIVE) {
+                    Text(
+                        text = "Aucune surveillance n'est activée.",
+                        style = IntruderTypography.Label,
+                        color = IntruderColors.TextSecondary
+                    )
+                }
             }
         }
 

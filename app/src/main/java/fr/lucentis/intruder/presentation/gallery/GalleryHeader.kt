@@ -18,12 +18,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import fr.lucentis.intruder.presentation.settings.FeatureState
+import fr.lucentis.intruder.presentation.common.FeatureState
 import fr.lucentis.intruder.presentation.theme.IntruderColors
 import fr.lucentis.intruder.presentation.theme.IntruderTypography
 
 @Composable
-fun GalleryHeader(protectionState: FeatureState = FeatureState.ACTIVE) {
+fun GalleryHeader(protectionState: FeatureState) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -73,6 +73,12 @@ private fun ProtectionBadge(state: FeatureState) {
             container = IntruderColors.SurfaceVariant
             content = IntruderColors.TextSecondary
             label = "Inactif"
+        }
+
+        FeatureState.DISABLED -> {
+            container = IntruderColors.SurfaceVariant
+            content = IntruderColors.TextSecondary
+            label = "Désactivé"
         }
     }
 

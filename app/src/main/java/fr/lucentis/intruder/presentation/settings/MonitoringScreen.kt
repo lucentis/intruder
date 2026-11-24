@@ -38,13 +38,15 @@ fun MonitoringScreen(
                 }
             )
 
-            PermissionNotice(
-                granted = isAdminActive,
-                grantedLabel = "Administrateur de l'appareil : autorisé",
-                warning = "L'autorisation Administrateur de l'appareil est nécessaire " +
-                    "pour détecter les codes PIN échoués."
-            ) {
-                WarningAction(label = "Autoriser", onClick = onActivateAdmin)
+            if (settings.monitorFailedAttempts) {
+                PermissionNotice(
+                    granted = isAdminActive,
+                    grantedLabel = "Administrateur de l'appareil : autorisé",
+                    warning = "L'autorisation Administrateur de l'appareil est nécessaire " +
+                        "pour détecter les codes PIN échoués."
+                ) {
+                    WarningAction(label = "Autoriser", onClick = onActivateAdmin)
+                }
             }
         }
 

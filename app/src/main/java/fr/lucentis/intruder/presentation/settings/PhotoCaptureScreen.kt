@@ -29,16 +29,18 @@ fun PhotoCaptureScreen(
                 }
             )
 
-            PermissionNotice(
-                granted = hasCameraPermission,
-                grantedLabel = "Autorisation caméra : accordée",
-                warning = "L'autorisation caméra est nécessaire pour prendre les photos."
-            ) {
-                WarningAction(label = "Autoriser", onClick = onRequestCameraPermission)
-                WarningAction(
-                    label = "Paramètres Android",
-                    onClick = onOpenAppSettings
-                )
+            if (settings.automaticCaptureEnabled) {
+                PermissionNotice(
+                    granted = hasCameraPermission,
+                    grantedLabel = "Autorisation caméra : accordée",
+                    warning = "L'autorisation caméra est nécessaire pour prendre les photos."
+                ) {
+                    WarningAction(label = "Autoriser", onClick = onRequestCameraPermission)
+                    WarningAction(
+                        label = "Paramètres Android",
+                        onClick = onOpenAppSettings
+                    )
+                }
             }
         }
 
@@ -68,7 +70,7 @@ fun PhotoCaptureScreen(
         }
 
         SettingsInfoCard(
-            text = "La capture photo est indépendante des réglages de surveillance."
+            text = "La capture s'applique aux événements détectés par la surveillance."
         )
     }
 }

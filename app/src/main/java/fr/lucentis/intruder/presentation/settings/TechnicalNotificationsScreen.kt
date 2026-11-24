@@ -15,6 +15,10 @@ fun TechnicalNotificationsScreen(
     onOpenNotificationSettings: () -> Unit,
     onBack: () -> Unit
 ) {
+    val anyNotificationEnabled = settings.notifyProtectionInterrupted ||
+        settings.notifyMissingPermission ||
+        settings.notifyCaptureProblem
+
     SettingsSubScreen(title = "Notifications techniques", onBack = onBack) {
         SettingsCard(title = "Types de notifications") {
             SettingsSwitchRow(
@@ -53,16 +57,18 @@ fun TechnicalNotificationsScreen(
                 }
             )
 
-            PermissionNotice(
-                granted = notificationsEnabled,
-                grantedLabel = "Notifications autorisées dans Android",
-                warning = "Les notifications sont bloquées dans Android. Les problèmes " +
-                    "restent enregistrés, mais aucune alerte ne s'affichera."
-            ) {
-                WarningAction(
-                    label = "Ouvrir les paramètres Android",
-                    onClick = onOpenNotificationSettings
-                )
+            if (anyNotificationEnabled) {
+                PermissionNotice(
+                    granted = notificationsEnabled,
+                    grantedLabel = "Notifications autorisées dans Android",
+                    warning = "Les notifications sont bloquées dans Android. Les problèmes " +
+                        "restent enregistrés, mais aucune alerte ne s'affichera."
+                ) {
+                    WarningAction(
+                        label = "Ouvrir les paramètres Android",
+                        onClick = onOpenNotificationSettings
+                    )
+                }
             }
         }
 
