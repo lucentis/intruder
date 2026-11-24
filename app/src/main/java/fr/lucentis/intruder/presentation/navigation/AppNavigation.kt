@@ -132,6 +132,10 @@ fun AppNavigation(container: AppContainer) {
             Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
         notificationsEnabled = notificationManager.areNotificationsEnabled()
+
+        // Restarting the service refreshes its notification, which states which
+        // permissions are missing.
+        scope.launch { synchronizeSuccessfulUnlockMonitor(context, container) }
     }
 
     // Events are ordered newest first by the DAO.
@@ -259,10 +263,12 @@ fun AppNavigation(container: AppContainer) {
                             val after = container.settingsRepository.settings.first()
 
                             // The unlock monitor is a foreground service: only start or
-                            // stop it when a setting that controls it has changed.
+                            // stop it, or refresh its notification, when a setting it depends on has changed.
                             val monitorChanged =
                                 before.globalProtectionEnabled != after.globalProtectionEnabled ||
-                                    before.monitorSuccessfulUnlocks != after.monitorSuccessfulUnlocks
+                                    before.monitorSuccessfulUnlocks != after.monitorSuccessfulUnlocks ||
+                                    before.monitorFailedAttempts != after.monitorFailedAttempts ||
+                                    before.automaticCaptureEnabled != after.automaticCaptureEnabled
 
                             if (monitorChanged) {
                                 synchronizeSuccessfulUnlockMonitor(context, container)
