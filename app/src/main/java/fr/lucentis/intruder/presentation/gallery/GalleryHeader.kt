@@ -15,13 +15,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import fr.lucentis.intruder.presentation.settings.FeatureState
 import fr.lucentis.intruder.presentation.theme.IntruderColors
 import fr.lucentis.intruder.presentation.theme.IntruderTypography
 
 @Composable
-fun GalleryHeader() {
+fun GalleryHeader(protectionState: FeatureState = FeatureState.ACTIVE) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -37,7 +39,7 @@ fun GalleryHeader() {
                 color = IntruderColors.TextPrimary
             )
 
-            ProtectionBadge()
+            ProtectionBadge(protectionState)
         }
 
         HorizontalDivider(
@@ -49,11 +51,35 @@ fun GalleryHeader() {
 
 // The dot and the label both carry the state, so it is not conveyed by color alone.
 @Composable
-private fun ProtectionBadge() {
+private fun ProtectionBadge(state: FeatureState) {
+    val container: Color
+    val content: Color
+    val label: String
+
+    when (state) {
+        FeatureState.ACTIVE -> {
+            container = IntruderColors.SuccessContainer
+            content = IntruderColors.Success
+            label = "Actif"
+        }
+
+        FeatureState.WARNING -> {
+            container = IntruderColors.WarningContainer
+            content = IntruderColors.Warning
+            label = "Attention"
+        }
+
+        FeatureState.INACTIVE -> {
+            container = IntruderColors.SurfaceVariant
+            content = IntruderColors.TextSecondary
+            label = "Inactif"
+        }
+    }
+
     Row(
         modifier = Modifier
             .clip(CircleShape)
-            .background(IntruderColors.SuccessContainer)
+            .background(container)
             .padding(horizontal = 12.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -61,13 +87,13 @@ private fun ProtectionBadge() {
         Box(
             modifier = Modifier
                 .size(7.dp)
-                .background(IntruderColors.Success, CircleShape)
+                .background(content, CircleShape)
         )
 
         Text(
-            text = "Actif",
+            text = label,
             style = IntruderTypography.Label.copy(fontWeight = FontWeight.SemiBold),
-            color = IntruderColors.Success
+            color = content
         )
     }
 }

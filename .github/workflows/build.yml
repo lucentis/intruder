@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - claude
+      - claude/**
   pull_request:
   workflow_dispatch:
 

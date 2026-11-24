@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fr.lucentis.intruder.domain.gallery.GalleryDisplayMode
 import fr.lucentis.intruder.domain.model.Event
+import fr.lucentis.intruder.presentation.settings.FeatureState
 import fr.lucentis.intruder.presentation.theme.IntruderColors
 import fr.lucentis.intruder.presentation.theme.IntruderTypography
 import java.time.LocalDate
@@ -86,6 +87,7 @@ fun GalleryScreen(
     onDisplayModeChange: (GalleryDisplayMode) -> Unit,
     onDeleteEvents: (List<Long>) -> Unit = {},
     onEventClick: (Event) -> Unit = {},
+    protectionState: FeatureState = FeatureState.ACTIVE,
 ) {
     var selectedFilter by rememberSaveable {
         mutableStateOf(GalleryFilter.ALL)
@@ -153,7 +155,7 @@ fun GalleryScreen(
                 .padding(start = 20.dp, end = 20.dp, top = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            GalleryHeader()
+            GalleryHeader(protectionState)
 
             GalleryToolbar(
                 selectedFilter = selectedFilter,
