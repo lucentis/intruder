@@ -1,25 +1,25 @@
-
 package fr.lucentis.intruder.presentation.navigation
 
 import android.Manifest
+import android.app.NotificationManager
 import android.app.admin.DevicePolicyManager
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,18 +34,20 @@ import androidx.core.content.ContextCompat
 import fr.lucentis.intruder.di.AppContainer
 import fr.lucentis.intruder.domain.event.EventPersistenceException
 import fr.lucentis.intruder.domain.event.EventProcessingOutcome
+import fr.lucentis.intruder.domain.gallery.GalleryDisplayMode
 import fr.lucentis.intruder.domain.model.AppSettings
 import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
-import fr.lucentis.intruder.domain.gallery.GalleryDisplayMode
 import fr.lucentis.intruder.platform.monitoring.FailedUnlockMonitor
 import fr.lucentis.intruder.platform.monitoring.SuccessfulUnlockMonitor
-import fr.lucentis.intruder.presentation.debug.DiagnosticInfo
+import fr.lucentis.intruder.presentation.common.OnResumeEffect
 import fr.lucentis.intruder.presentation.debug.DebugScreen
+import fr.lucentis.intruder.presentation.debug.DiagnosticInfo
 import fr.lucentis.intruder.presentation.gallery.EventDetailScreen
 import fr.lucentis.intruder.presentation.gallery.GalleryScreen
-import fr.lucentis.intruder.presentation.settings.SettingsScreen
+import fr.lucentis.intruder.presentation.settings.SettingsHost
+import fr.lucentis.intruder.presentation.settings.protectionOverview
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -84,6 +86,10 @@ fun AppNavigation(container: AppContainer) {
         ComponentName(context, FailedUnlockMonitor::class.java)
     }
 
+    val notificationManager = remember {
+        context.getSystemService(NotificationManager::class.java)
+    }
+
     var isAdminActive by remember {
         mutableStateOf(devicePolicyManager.isAdminActive(adminComponent))
     }
@@ -111,6 +117,23 @@ fun AppNavigation(container: AppContainer) {
         hasCameraPermission = isGranted
     }
 
+    // areNotificationsEnabled covers both the runtime permission (Android 13+) and the
+    // switch the user can turn off in the system settings.
+    var notificationsEnabled by remember {
+        mutableStateOf(notificationManager.areNotificationsEnabled())
+    }
+
+    // These three can be changed from Android's own settings while the app is in the
+    // background, so they are read again each time the app comes back to the foreground.
+    OnResumeEffect {
+        isAdminActive = devicePolicyManager.isAdminActive(adminComponent)
+        hasCameraPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+        notificationsEnabled = notificationManager.areNotificationsEnabled()
+    }
+
     // Events are ordered newest first by the DAO.
     val eventCount = events.size
     val latestEvent = events.firstOrNull()
@@ -126,8 +149,12 @@ fun AppNavigation(container: AppContainer) {
     val settings by container.settingsRepository.settings
         .collectAsState(initial = AppSettings())
 
+    val overview = protectionOverview(settings, isAdminActive, hasCameraPermission)
+
     // Keep track of the test event so that we can delete only that event.
     var lastTestEventId by remember { mutableStateOf<Long?>(null) }
+
+    val appVersion = remember { readVersionName(context) }
 
     val diagnosticInfo = diagnostic?.let { result ->
         val processing = when (val outcome = result.outcome) {
@@ -160,28 +187,10 @@ fun AppNavigation(container: AppContainer) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    icon = { Text("⌂") },
-                    label = { Text("Accueil") }
-                )
-
-                NavigationBarItem(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    icon = { Text("⚙") },
-                    label = { Text("Réglages") }
-                )
-
-                NavigationBarItem(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    icon = { Text("⚙") },
-                    label = { Text("Debug") }
-                )
-            }
+            AppBottomBar(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it }
+            )
         }
     ) { innerPadding ->
         Column(
@@ -230,81 +239,85 @@ fun AppNavigation(container: AppContainer) {
                                         ids = ids
                                     )
                                 }
-                            }
+                            },
+                            protectionState = overview.global
                         )
                     }
                 }
 
-                1 -> Column(
+                1 -> SettingsHost(
+                    settings = settings,
+                    isAdminActive = isAdminActive,
+                    hasCameraPermission = hasCameraPermission,
+                    notificationsEnabled = notificationsEnabled,
+                    eventCount = eventCount,
+                    appVersion = appVersion,
+                    onUpdate = { transform ->
+                        scope.launch {
+                            val before = container.settingsRepository.settings.first()
+                            container.settingsRepository.update(transform)
+                            val after = container.settingsRepository.settings.first()
+
+                            // The unlock monitor is a foreground service: only start or
+                            // stop it when a setting that controls it has changed.
+                            val monitorChanged =
+                                before.globalProtectionEnabled != after.globalProtectionEnabled ||
+                                    before.monitorSuccessfulUnlocks != after.monitorSuccessfulUnlocks
+
+                            if (monitorChanged) {
+                                synchronizeSuccessfulUnlockMonitor(context, container)
+                            }
+                        }
+                    },
+                    onActivateAdmin = {
+                        val intent = Intent(
+                            DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN
+                        ).apply {
+                            putExtra(
+                                DevicePolicyManager.EXTRA_DEVICE_ADMIN,
+                                adminComponent
+                            )
+                            putExtra(
+                                DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                                "Intruder doit pouvoir détecter les tentatives de déverrouillage échouées."
+                            )
+                        }
+
+                        adminActivationLauncher.launch(intent)
+                    },
+                    onRequestCameraPermission = {
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    },
+                    onOpenAppSettings = {
+                        openSystemScreen(
+                            context,
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", context.packageName, null)
+                            )
+                        )
+                    },
+                    onOpenNotificationSettings = {
+                        openSystemScreen(
+                            context,
+                            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(
+                                Settings.EXTRA_APP_PACKAGE,
+                                context.packageName
+                            )
+                        )
+                    },
+                    onOpenGallery = { selectedTab = 0 }
+                )
+
+                2 -> Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    SettingsScreen(
-                        settings = settings,
-                        isAdminActive = isAdminActive,
-                        hasCameraPermission = hasCameraPermission,
+                    DebugScreen(
+                        latestEvent = latestEvent,
+                        diagnostic = diagnosticInfo,
                         hasTestEvent = lastTestEventId != null,
-                        onActivateAdmin = {
-                            val intent = Intent(
-                                DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN
-                            ).apply {
-                                putExtra(
-                                    DevicePolicyManager.EXTRA_DEVICE_ADMIN,
-                                    adminComponent
-                                )
-                                putExtra(
-                                    DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                                    "Intruder doit pouvoir détecter les tentatives de déverrouillage échouées."
-                                )
-                            }
-
-                            adminActivationLauncher.launch(intent)
-                        },
-                        onRequestCameraPermission = {
-                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                        },
-                        onToggleAutomaticCapture = {
-                            scope.launch {
-                                container.settingsRepository.update {
-                                    it.copy(
-                                        automaticCaptureEnabled = !it.automaticCaptureEnabled
-                                    )
-                                }
-                            }
-                        },
-                        onToggleGlobalProtection = {
-                            scope.launch {
-                                container.settingsRepository.update {
-                                    it.copy(
-                                        globalProtectionEnabled = !it.globalProtectionEnabled
-                                    )
-                                }
-
-                                synchronizeSuccessfulUnlockMonitor(context, container)
-                            }
-                        },
-                        onToggleFailedAttempts = {
-                            scope.launch {
-                                container.settingsRepository.update {
-                                    it.copy(
-                                        monitorFailedAttempts = !it.monitorFailedAttempts
-                                    )
-                                }
-                            }
-                        },
-                        onToggleSuccessfulUnlocks = {
-                            scope.launch {
-                                container.settingsRepository.update {
-                                    it.copy(
-                                        monitorSuccessfulUnlocks =
-                                            !it.monitorSuccessfulUnlocks
-                                    )
-                                }
-
-                                synchronizeSuccessfulUnlockMonitor(context, container)
-                            }
-                        },
                         onAddTestEvent = {
                             scope.launch {
                                 lastTestEventId = container.eventRepository.insert(
@@ -334,19 +347,29 @@ fun AppNavigation(container: AppContainer) {
                         }
                     )
                 }
-
-                2 -> Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    DebugScreen(
-                        latestEvent = latestEvent,
-                        diagnostic = diagnosticInfo
-                    )
-                }
             }
         }
+    }
+}
+
+private fun readVersionName(context: Context): String = try {
+    @Suppress("DEPRECATION")
+    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "inconnue"
+} catch (exception: PackageManager.NameNotFoundException) {
+    "inconnue"
+}
+
+// Opens a system settings screen. A device without that screen would throw, and a missing
+// settings page must not crash the app.
+private fun openSystemScreen(context: Context, intent: Intent) {
+    try {
+        context.startActivity(intent)
+    } catch (exception: ActivityNotFoundException) {
+        Toast.makeText(
+            context,
+            "Impossible d'ouvrir les paramètres Android.",
+            Toast.LENGTH_LONG
+        ).show()
     }
 }
 

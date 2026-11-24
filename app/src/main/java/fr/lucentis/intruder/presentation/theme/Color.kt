@@ -27,6 +27,11 @@ object IntruderColors {
     val SuccessContainer = Color(0xFFE0EEE4)
 
     val Error = Color(0xFFC95757)
+
+    // Provisional: the design system does not define a warning color yet.
+    val Warning = Color(0xFF92611A)
+    val WarningContainer = Color(0xFFFBF0DC)
+
     val Info = Color(0xFF64748B)
 
     // Neutral gradient shown behind photos that are missing or still loading.

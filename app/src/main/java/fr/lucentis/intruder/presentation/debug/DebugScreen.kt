@@ -1,4 +1,3 @@
-
 package fr.lucentis.intruder.presentation.debug
 
 import android.graphics.BitmapFactory
@@ -8,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,7 +30,10 @@ data class DiagnosticInfo(
 @Composable
 fun DebugScreen(
     latestEvent: Event?,
-    diagnostic: DiagnosticInfo?
+    diagnostic: DiagnosticInfo?,
+    hasTestEvent: Boolean,
+    onAddTestEvent: () -> Unit,
+    onDeleteTestEvent: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -119,6 +122,29 @@ fun DebugScreen(
                         Text(it)
                     } ?: Text("Échec de capture : aucun.")
                 } ?: Text("Aucun diagnostic disponible.")
+            }
+        }
+        // Test tools: they insert and delete a synthetic event without any camera capture.
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    "Outils de test",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Button(onClick = onAddTestEvent) {
+                    Text("Ajouter un événement de test")
+                }
+
+                Button(
+                    onClick = onDeleteTestEvent,
+                    enabled = hasTestEvent
+                ) {
+                    Text("Supprimer l'événement de test")
+                }
             }
         }
     }
