@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +41,8 @@ import fr.lucentis.intruder.domain.model.AppSettings
 import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
+import fr.lucentis.intruder.domain.notification.AlertScreen
+import fr.lucentis.intruder.domain.notification.AlertTarget
 import fr.lucentis.intruder.platform.monitoring.FailedUnlockMonitor
 import fr.lucentis.intruder.platform.monitoring.SuccessfulUnlockMonitor
 import fr.lucentis.intruder.presentation.common.OnResumeEffect
@@ -48,13 +51,19 @@ import fr.lucentis.intruder.presentation.debug.DiagnosticInfo
 import fr.lucentis.intruder.presentation.gallery.EventDetailScreen
 import fr.lucentis.intruder.presentation.gallery.GalleryScreen
 import fr.lucentis.intruder.presentation.settings.SettingsHost
+import fr.lucentis.intruder.presentation.settings.SettingsRoute
 import fr.lucentis.intruder.presentation.settings.protectionOverview
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Composable
-fun AppNavigation(container: AppContainer) {
+fun AppNavigation(
+    container: AppContainer,
+    // Where a tapped notification wants to go, or null.
+    openRequest: AlertTarget?,
+    onOpenRequestHandled: () -> Unit
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -62,6 +71,26 @@ fun AppNavigation(container: AppContainer) {
 
     var selectedEventId by rememberSaveable {
         mutableStateOf<Long?>(null)
+    }
+
+    // Owned here, not by the settings tab, so that a notification can open a given page.
+    var settingsRoute by rememberSaveable {
+        mutableStateOf(SettingsRoute.MAIN)
+    }
+
+    LaunchedEffect(openRequest) {
+        val target = openRequest ?: return@LaunchedEffect
+
+        if (target.screen == AlertScreen.EVENT_DETAIL && target.eventId != null) {
+            selectedTab = 0
+            selectedEventId = target.eventId
+        } else {
+            selectedEventId = null
+            selectedTab = 1
+            settingsRoute = target.screen.toSettingsRoute()
+        }
+
+        onOpenRequestHandled()
     }
 
     // Room emits a new list whenever the event table changes.
@@ -204,7 +233,11 @@ fun AppNavigation(container: AppContainer) {
         bottomBar = {
             AppBottomBar(
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
+                onTabSelected = { tab ->
+                    // Coming back to the settings tab always starts on its main page.
+                    if (tab == 1 && selectedTab != 1) settingsRoute = SettingsRoute.MAIN
+                    selectedTab = tab
+                }
             )
         }
     ) { innerPadding ->
@@ -261,6 +294,8 @@ fun AppNavigation(container: AppContainer) {
                 }
 
                 1 -> SettingsHost(
+                    route = settingsRoute,
+                    onRouteChange = { settingsRoute = it },
                     settings = settings,
                     isAdminActive = isAdminActive,
                     hasCameraPermission = hasCameraPermission,
@@ -377,6 +412,14 @@ fun AppNavigation(container: AppContainer) {
             }
         }
     }
+}
+
+private fun AlertScreen.toSettingsRoute(): SettingsRoute = when (this) {
+    AlertScreen.SETTINGS_GLOBAL_PROTECTION -> SettingsRoute.GLOBAL_PROTECTION
+    AlertScreen.SETTINGS_MONITORING -> SettingsRoute.MONITORING
+    AlertScreen.SETTINGS_PHOTO_CAPTURE -> SettingsRoute.PHOTO_CAPTURE
+    AlertScreen.SETTINGS_STORAGE -> SettingsRoute.STORAGE
+    AlertScreen.EVENT_DETAIL -> SettingsRoute.MAIN
 }
 
 private fun readVersionName(context: Context): String = try {

@@ -6,6 +6,8 @@ import fr.lucentis.intruder.domain.model.CaptureResult
 import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
+import fr.lucentis.intruder.domain.notification.AlertScreen
+import fr.lucentis.intruder.domain.notification.AlertTarget
 import fr.lucentis.intruder.domain.notification.NoOpTechnicalAlertNotifier
 import fr.lucentis.intruder.domain.notification.TechnicalAlert
 import fr.lucentis.intruder.domain.notification.TechnicalAlertNotifier
@@ -124,23 +126,29 @@ class EventProcessor(
         return publishDiagnostic(command, outcome, captureFailure)
     }
 
-    // One alert per occurrence: no grouping and no rate limit in V1. A missing permission has
-    // its own category, any other capture or storage problem falls under "capture problem".
+    // One alert per occurrence: no grouping and no rate limit in V1. A problem tied to an
+    // event leads to its detail screen. A missing permission is a lasting problem, so it
+    // leads to the settings page that shows the warning.
     private suspend fun alertOnProblem(outcome: EventProcessingOutcome) {
-        val alert = when (outcome) {
+        val report: Pair<TechnicalAlert, AlertTarget> = when (outcome) {
             is EventProcessingOutcome.Recorded -> when {
                 outcome.event.captureStatus != CaptureStatus.FAILED -> null
                 outcome.event.failureReason == CaptureFailureReason.PERMISSION_MISSING ->
-                    TechnicalAlert.MISSING_PERMISSION
-                else -> TechnicalAlert.CAPTURE_PROBLEM
+                    TechnicalAlert.MISSING_PERMISSION to
+                        AlertTarget(AlertScreen.SETTINGS_PHOTO_CAPTURE)
+                else ->
+                    TechnicalAlert.CAPTURE_PROBLEM to
+                        AlertTarget(AlertScreen.EVENT_DETAIL, outcome.event.id)
             }
 
-            is EventProcessingOutcome.PersistenceFailed -> TechnicalAlert.CAPTURE_PROBLEM
+            is EventProcessingOutcome.PersistenceFailed ->
+                TechnicalAlert.CAPTURE_PROBLEM to AlertTarget(AlertScreen.SETTINGS_STORAGE)
+
             is EventProcessingOutcome.Ignored -> null
         } ?: return
 
         try {
-            alerts.notify(alert)
+            alerts.notify(report.first, report.second)
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {

@@ -6,6 +6,8 @@ import android.content.Intent
 import android.util.Log
 import fr.lucentis.intruder.IntruderApplication
 import fr.lucentis.intruder.di.AppContainer
+import fr.lucentis.intruder.domain.notification.AlertScreen
+import fr.lucentis.intruder.domain.notification.AlertTarget
 import fr.lucentis.intruder.domain.notification.TechnicalAlert
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -42,7 +44,10 @@ class FailedUnlockMonitor : DeviceAdminReceiver() {
 
             // The failed attempt will not be recorded: the protection is not doing its job.
             runAsync(context) { container ->
-                container.technicalAlertNotifier.notify(TechnicalAlert.PROTECTION_INTERRUPTED)
+                container.technicalAlertNotifier.notify(
+                    TechnicalAlert.PROTECTION_INTERRUPTED,
+                    AlertTarget(AlertScreen.SETTINGS_GLOBAL_PROTECTION)
+                )
             }
         }
     }

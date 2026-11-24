@@ -2,10 +2,6 @@ package fr.lucentis.intruder.presentation.settings
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import fr.lucentis.intruder.domain.model.AppSettings
 
 enum class SettingsRoute {
@@ -22,10 +18,13 @@ enum class SettingsRoute {
 typealias SettingsUpdate = ((AppSettings) -> AppSettings) -> Unit
 
 // The settings tab is a single level of sub-pages, so the current page is plain state
-// instead of a navigation graph. The system back button returns to the main page, and
-// leaving the tab resets it because this composable leaves the composition.
+// instead of a navigation graph. The state is owned by the caller so that a notification
+// can open a given page, whether the tab is already displayed or not. The system back
+// button returns to the main page.
 @Composable
 fun SettingsHost(
+    route: SettingsRoute,
+    onRouteChange: (SettingsRoute) -> Unit,
     settings: AppSettings,
     isAdminActive: Boolean,
     hasCameraPermission: Boolean,
@@ -40,19 +39,17 @@ fun SettingsHost(
     onOpenNotificationSettings: () -> Unit,
     onOpenGallery: () -> Unit
 ) {
-    var route by rememberSaveable { mutableStateOf(SettingsRoute.MAIN) }
-
     BackHandler(enabled = route != SettingsRoute.MAIN) {
-        route = SettingsRoute.MAIN
+        onRouteChange(SettingsRoute.MAIN)
     }
 
     val overview = protectionOverview(settings, isAdminActive, hasCameraPermission)
-    val goBack = { route = SettingsRoute.MAIN }
+    val goBack = { onRouteChange(SettingsRoute.MAIN) }
 
     when (route) {
         SettingsRoute.MAIN -> SettingsMainScreen(
             overview = overview,
-            onNavigate = { route = it }
+            onNavigate = onRouteChange
         )
 
         SettingsRoute.GLOBAL_PROTECTION -> GlobalProtectionScreen(

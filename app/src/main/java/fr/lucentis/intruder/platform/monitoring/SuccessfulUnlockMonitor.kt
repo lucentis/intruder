@@ -18,11 +18,13 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import fr.lucentis.intruder.IntruderApplication
-import fr.lucentis.intruder.MainActivity
 import fr.lucentis.intruder.domain.event.EventCommand
 import fr.lucentis.intruder.domain.event.EventProcessingOutcome
 import fr.lucentis.intruder.domain.model.EventType
+import fr.lucentis.intruder.domain.notification.AlertScreen
+import fr.lucentis.intruder.domain.notification.AlertTarget
 import fr.lucentis.intruder.domain.notification.TechnicalAlert
+import fr.lucentis.intruder.platform.notification.AlertIntent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -75,7 +77,10 @@ class SuccessfulUnlockMonitor : Service() {
             val container = (application as IntruderApplication).container
 
             container.applicationScope.launch {
-                container.technicalAlertNotifier.notify(TechnicalAlert.PROTECTION_INTERRUPTED)
+                container.technicalAlertNotifier.notify(
+                    TechnicalAlert.PROTECTION_INTERRUPTED,
+                    AlertTarget(AlertScreen.SETTINGS_GLOBAL_PROTECTION)
+                )
             }
 
             if (foregroundStarted) {
@@ -218,7 +223,8 @@ class SuccessfulUnlockMonitor : Service() {
 
                 if (restartedBySystem && !permissionLost) {
                     container.technicalAlertNotifier.notify(
-                        TechnicalAlert.PROTECTION_INTERRUPTED
+                        TechnicalAlert.PROTECTION_INTERRUPTED,
+                        AlertTarget(AlertScreen.SETTINGS_GLOBAL_PROTECTION)
                     )
                 }
             } catch (exception: CancellationException) {
@@ -267,51 +273,61 @@ class SuccessfulUnlockMonitor : Service() {
     }
 
     // A permission only counts as missing when the feature that needs it is enabled.
-    private suspend fun missingPermissions(): List<String> {
+    private suspend fun missingPermissions(): List<MissingPermission> {
         val settings = (application as IntruderApplication)
             .container.settingsRepository.settings.first()
 
-        val missing = mutableListOf<String>()
+        val missing = mutableListOf<MissingPermission>()
 
         if (settings.automaticCaptureEnabled &&
             checkSelfPermission(Manifest.permission.CAMERA) !=
             PackageManager.PERMISSION_GRANTED
         ) {
-            missing += "caméra"
+            missing += MissingPermission.CAMERA
         }
 
         val adminActive = getSystemService(DevicePolicyManager::class.java)
             .isAdminActive(ComponentName(this, FailedUnlockMonitor::class.java))
 
         if (settings.monitorFailedAttempts && !adminActive) {
-            missing += "administrateur de l'appareil"
+            missing += MissingPermission.ADMIN
         }
 
         return missing
     }
 
     private fun createNotification(
-        missingPermissions: List<String> = emptyList()
+        missingPermissions: List<MissingPermission> = emptyList()
     ): Notification {
+        val labels = missingPermissions.joinToString(", ") { it.label }
+
         val (title, text) = when {
             missingPermissions.isEmpty() ->
                 "Intruder" to "Surveillance des déverrouillages en cours"
 
             missingPermissions.size == 1 ->
                 "Protection limitée" to
-                    "Autorisation manquante : ${missingPermissions.first()}. " +
-                    "Appuyez pour ouvrir l'application."
+                    "Autorisation manquante : . Appuyez pour la rétablir."
 
             else ->
                 "Protection limitée" to
-                    "Autorisations manquantes : ${missingPermissions.joinToString(", ")}. " +
-                    "Appuyez pour ouvrir l'application."
+                    "Autorisations manquantes : . Appuyez pour les rétablir."
+        }
+
+        // Tapping it opens the page that shows the warning. With nothing wrong it only
+        // opens the app. The extras are replaced on every refresh (FLAG_UPDATE_CURRENT).
+        val target = when {
+            missingPermissions.isEmpty() -> null
+            missingPermissions.size > 1 -> AlertTarget(AlertScreen.SETTINGS_GLOBAL_PROTECTION)
+            missingPermissions.first() == MissingPermission.ADMIN ->
+                AlertTarget(AlertScreen.SETTINGS_MONITORING)
+            else -> AlertTarget(AlertScreen.SETTINGS_PHOTO_CAPTURE)
         }
 
         val openApp = PendingIntent.getActivity(
             this,
             0,
-            Intent(this, MainActivity::class.java),
+            AlertIntent.create(this, target),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
@@ -323,6 +339,11 @@ class SuccessfulUnlockMonitor : Service() {
             .setContentIntent(openApp)
             .setOngoing(true)
             .build()
+    }
+
+    private enum class MissingPermission(val label: String) {
+        CAMERA("caméra"),
+        ADMIN("administrateur de l'appareil")
     }
 
     override fun onDestroy() {

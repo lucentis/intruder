@@ -5,8 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import fr.lucentis.intruder.MainActivity
+import fr.lucentis.intruder.domain.notification.AlertTarget
 import fr.lucentis.intruder.domain.notification.TechnicalAlert
 import fr.lucentis.intruder.domain.notification.TechnicalAlertNotifier
 import fr.lucentis.intruder.domain.settings.SettingsRepository
@@ -24,7 +23,7 @@ class AndroidTechnicalAlertNotifier(
     // gets its own notification instead of replacing an earlier one that is still displayed.
     private val nextId = AtomicInteger((System.currentTimeMillis() / 1000).toInt())
 
-    override suspend fun notify(alert: TechnicalAlert) {
+    override suspend fun notify(alert: TechnicalAlert, target: AlertTarget) {
         val settings = settingsRepository.settings.first()
 
         val enabled = when (alert) {
@@ -50,19 +49,24 @@ class AndroidTechnicalAlertNotifier(
 
         // Without the notification permission Android drops the notification silently. The
         // problem stays visible in the app, as the specification requires.
-        manager.notify(nextId.incrementAndGet(), buildNotification())
+        val id = nextId.incrementAndGet()
+
+        manager.notify(id, buildNotification(id, target))
     }
 
     // The text is the same for every category and says nothing sensitive, because it can be
     // read on the lock screen. The details are in the app.
-    private fun buildNotification(): Notification {
+    private fun buildNotification(id: Int, target: AlertTarget): Notification {
         val text = "Une fonctionnalité de protection a rencontré une erreur. " +
             "Ouvrez Intruder pour en savoir plus."
 
+        // The id is the request code: PendingIntents that differ only by their extras are
+        // otherwise treated as the same one, and every notification would lead to the
+        // destination of the latest alert.
         val openApp = PendingIntent.getActivity(
             appContext,
-            0,
-            Intent(appContext, MainActivity::class.java),
+            id,
+            AlertIntent.create(appContext, target),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 

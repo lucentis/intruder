@@ -5,6 +5,8 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import fr.lucentis.intruder.domain.notification.AlertScreen
+import fr.lucentis.intruder.domain.notification.AlertTarget
 import fr.lucentis.intruder.domain.notification.TechnicalAlert
 import fr.lucentis.intruder.domain.notification.TechnicalAlertNotifier
 import fr.lucentis.intruder.domain.settings.SettingsRepository
@@ -36,10 +38,11 @@ class ProtectionPermissionWatcher(
 
         preferences.edit().putStringSet(KEY_MISSING, missing).apply()
 
-        val isNewProblem = previous != null && (missing - previous).isNotEmpty()
+        val newlyMissing = if (previous == null) emptySet() else missing - previous
+        val isNewProblem = newlyMissing.isNotEmpty()
 
         if (isNewProblem && alertOnNewProblem) {
-            notifier.notify(TechnicalAlert.MISSING_PERMISSION)
+            notifier.notify(TechnicalAlert.MISSING_PERMISSION, targetFor(newlyMissing))
         }
 
         return isNewProblem
@@ -58,7 +61,22 @@ class ProtectionPermissionWatcher(
 
         preferences.edit().putStringSet(KEY_MISSING, previous + ADMIN).apply()
 
-        notifier.notify(TechnicalAlert.MISSING_PERMISSION)
+        notifier.notify(
+            TechnicalAlert.MISSING_PERMISSION,
+            AlertTarget(AlertScreen.SETTINGS_MONITORING)
+        )
+    }
+
+    // The page that shows the warning for the lost permission. When both were lost, the
+    // global protection page lists the state of every feature.
+    private fun targetFor(newlyMissing: Set<String>): AlertTarget {
+        val screen = when {
+            newlyMissing.size > 1 -> AlertScreen.SETTINGS_GLOBAL_PROTECTION
+            ADMIN in newlyMissing -> AlertScreen.SETTINGS_MONITORING
+            else -> AlertScreen.SETTINGS_PHOTO_CAPTURE
+        }
+
+        return AlertTarget(screen)
     }
 
     // A permission only counts when the feature that needs it is enabled.
