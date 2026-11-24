@@ -1,11 +1,14 @@
-
 package fr.lucentis.intruder.domain.event
 
 import fr.lucentis.intruder.domain.model.AppSettings
+import fr.lucentis.intruder.domain.model.CaptureFailureReason
 import fr.lucentis.intruder.domain.model.CaptureResult
 import fr.lucentis.intruder.domain.model.CaptureStatus
 import fr.lucentis.intruder.domain.model.Event
 import fr.lucentis.intruder.domain.model.EventType
+import fr.lucentis.intruder.domain.notification.NoOpTechnicalAlertNotifier
+import fr.lucentis.intruder.domain.notification.TechnicalAlert
+import fr.lucentis.intruder.domain.notification.TechnicalAlertNotifier
 import fr.lucentis.intruder.domain.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,7 +53,8 @@ class EventProcessor(
     private val settingsRepository: SettingsRepository,
     private val photoCapturer: PhotoCapturer,
     private val eventRepository: EventRepository,
-    private val photoStorage: PhotoStorage
+    private val photoStorage: PhotoStorage,
+    private val alerts: TechnicalAlertNotifier = NoOpTechnicalAlertNotifier
 ) {
 
     // The latest diagnostic is kept in memory and exposed as a read-only Flow.
@@ -115,7 +119,33 @@ class EventProcessor(
             EventProcessingOutcome.PersistenceFailed(exception, orphanPhotoLeftBehind)
         }
 
+        alertOnProblem(outcome)
+
         return publishDiagnostic(command, outcome, captureFailure)
+    }
+
+    // One alert per occurrence: no grouping and no rate limit in V1. A missing permission has
+    // its own category, any other capture or storage problem falls under "capture problem".
+    private suspend fun alertOnProblem(outcome: EventProcessingOutcome) {
+        val alert = when (outcome) {
+            is EventProcessingOutcome.Recorded -> when {
+                outcome.event.captureStatus != CaptureStatus.FAILED -> null
+                outcome.event.failureReason == CaptureFailureReason.PERMISSION_MISSING ->
+                    TechnicalAlert.MISSING_PERMISSION
+                else -> TechnicalAlert.CAPTURE_PROBLEM
+            }
+
+            is EventProcessingOutcome.PersistenceFailed -> TechnicalAlert.CAPTURE_PROBLEM
+            is EventProcessingOutcome.Ignored -> null
+        } ?: return
+
+        try {
+            alerts.notify(alert)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            // Failing to notify must never hide the event that was just recorded.
+        }
     }
 
     // Publishes the result for the diagnostic screen without changing the persisted Event.

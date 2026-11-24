@@ -35,6 +35,7 @@ fun SettingsHost(
     onUpdate: SettingsUpdate,
     onActivateAdmin: () -> Unit,
     onRequestCameraPermission: () -> Unit,
+    onRequestNotificationPermission: (() -> Unit)?,
     onOpenAppSettings: () -> Unit,
     onOpenNotificationSettings: () -> Unit,
     onOpenGallery: () -> Unit
@@ -82,6 +83,7 @@ fun SettingsHost(
             settings = settings,
             notificationsEnabled = notificationsEnabled,
             onUpdate = onUpdate,
+            onRequestNotificationPermission = onRequestNotificationPermission,
             onOpenNotificationSettings = onOpenNotificationSettings,
             onBack = goBack
         )

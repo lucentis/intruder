@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -123,6 +124,12 @@ fun AppNavigation(container: AppContainer) {
         mutableStateOf(notificationManager.areNotificationsEnabled())
     }
 
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+        notificationsEnabled = notificationManager.areNotificationsEnabled()
+    }
+
     // These three can be changed from Android's own settings while the app is in the
     // background, so they are read again each time the app comes back to the foreground.
     OnResumeEffect {
@@ -136,6 +143,10 @@ fun AppNavigation(container: AppContainer) {
         // Restarting the service refreshes its notification, which states which
         // permissions are missing.
         scope.launch { synchronizeSuccessfulUnlockMonitor(context, container) }
+
+        // Records the permissions as they are now, without alerting: the user is looking at
+        // the app. A later loss is detected against this state.
+        scope.launch { container.permissionWatcher.check(alertOnNewProblem = false) }
     }
 
     // Events are ordered newest first by the DAO.
@@ -294,6 +305,16 @@ fun AppNavigation(container: AppContainer) {
                     onRequestCameraPermission = {
                         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     },
+                    onRequestNotificationPermission =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            {
+                                notificationPermissionLauncher.launch(
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                )
+                            }
+                        } else {
+                            null
+                        },
                     onOpenAppSettings = {
                         openSystemScreen(
                             context,

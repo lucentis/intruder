@@ -22,6 +22,7 @@ import fr.lucentis.intruder.MainActivity
 import fr.lucentis.intruder.domain.event.EventCommand
 import fr.lucentis.intruder.domain.event.EventProcessingOutcome
 import fr.lucentis.intruder.domain.model.EventType
+import fr.lucentis.intruder.domain.notification.TechnicalAlert
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,8 +64,19 @@ class SuccessfulUnlockMonitor : Service() {
 
             refreshNotification()
 
+            // A null intent means Android restarted the service after killing the process.
+            reportStartup(restartedBySystem = intent == null)
+
         } catch (exception: Exception) {
             Log.e(TAG, "Unable to start successful unlock monitoring", exception)
+
+            // The service is about to stop, which cancels serviceScope: the alert is posted
+            // from the application scope so that it is not cut short.
+            val container = (application as IntruderApplication).container
+
+            container.applicationScope.launch {
+                container.technicalAlertNotifier.notify(TechnicalAlert.PROTECTION_INTERRUPTED)
+            }
 
             if (foregroundStarted) {
                 stopForeground(STOP_FOREGROUND_REMOVE)
@@ -191,6 +203,30 @@ class SuccessfulUnlockMonitor : Service() {
 
         getSystemService(NotificationManager::class.java)
             .createNotificationChannel(channel)
+    }
+
+    // A restart by the system means the monitoring was interrupted. When the cause is a
+    // permission that went missing, that more precise alert replaces the generic one.
+    private fun reportStartup(restartedBySystem: Boolean) {
+        val container = (application as IntruderApplication).container
+
+        serviceScope.launch {
+            try {
+                val permissionLost = container.permissionWatcher.check(
+                    alertOnNewProblem = restartedBySystem
+                )
+
+                if (restartedBySystem && !permissionLost) {
+                    container.technicalAlertNotifier.notify(
+                        TechnicalAlert.PROTECTION_INTERRUPTED
+                    )
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                Log.w(TAG, "Unable to report the monitoring startup", exception)
+            }
+        }
     }
 
     private fun startInForeground(notification: Notification) {

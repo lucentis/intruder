@@ -8,7 +8,13 @@ import fr.lucentis.intruder.data.repository.RoomEventRepository
 import fr.lucentis.intruder.domain.event.EventProcessor
 import fr.lucentis.intruder.domain.event.EventRepository
 import fr.lucentis.intruder.domain.event.PhotoStorage
+import fr.lucentis.intruder.domain.notification.TechnicalAlertNotifier
 import fr.lucentis.intruder.domain.settings.SettingsRepository
+import fr.lucentis.intruder.platform.monitoring.ProtectionPermissionWatcher
+import fr.lucentis.intruder.platform.notification.AndroidTechnicalAlertNotifier
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import fr.lucentis.intruder.platform.camera.AndroidPhotoCapturer
 import fr.lucentis.intruder.data.preferences.GalleryPreferences
 import fr.lucentis.intruder.domain.gallery.GalleryRepository
@@ -58,12 +64,25 @@ class AppContainer(context: Context) {
         )
     }
 
+    // Lives as long as the process. For short pieces of work that must outlive a service or a
+    // receiver callback, such as posting an alert while the component is being stopped.
+    val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    val technicalAlertNotifier: TechnicalAlertNotifier by lazy {
+        AndroidTechnicalAlertNotifier(appContext, settingsRepository)
+    }
+
+    val permissionWatcher: ProtectionPermissionWatcher by lazy {
+        ProtectionPermissionWatcher(appContext, settingsRepository, technicalAlertNotifier)
+    }
+
     val eventProcessor: EventProcessor by lazy {
         EventProcessor(
             settingsRepository = settingsRepository,
             photoCapturer = photoCapturer,
             eventRepository = eventRepository,
-            photoStorage = photoStorage
+            photoStorage = photoStorage,
+            alerts = technicalAlertNotifier
         )
     }
 }

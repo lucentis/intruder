@@ -12,6 +12,8 @@ fun TechnicalNotificationsScreen(
     settings: AppSettings,
     notificationsEnabled: Boolean,
     onUpdate: SettingsUpdate,
+    // Null before Android 13, where there is no runtime permission to request.
+    onRequestNotificationPermission: (() -> Unit)?,
     onOpenNotificationSettings: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -64,8 +66,15 @@ fun TechnicalNotificationsScreen(
                     warning = "Les notifications sont bloquées dans Android. Les problèmes " +
                         "restent enregistrés, mais aucune alerte ne s'affichera."
                 ) {
+                    if (onRequestNotificationPermission != null) {
+                        WarningAction(
+                            label = "Autoriser",
+                            onClick = onRequestNotificationPermission
+                        )
+                    }
+
                     WarningAction(
-                        label = "Ouvrir les paramètres Android",
+                        label = "Paramètres Android",
                         onClick = onOpenNotificationSettings
                     )
                 }
